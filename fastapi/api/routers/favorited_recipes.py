@@ -13,7 +13,7 @@ load_dotenv()
 
 router = APIRouter(
     prefix='/favorited_recipes',
-    tags=['workouts']
+    tags=['favorited_recipes']
 )
 
 class Favorited_RecipesBase(BaseModel):
