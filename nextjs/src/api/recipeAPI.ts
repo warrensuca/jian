@@ -1,9 +1,9 @@
-import { Macros, RecipeRecommendation } from "@/types";
+import { Macros, RecipeRecommendation, Cluster, FullRecipe, RecipeCardType } from "@/types";
 
 
 const BASE_URL = "https://chinese-recipe-api.vercel.app";
 
-export const fetchReccomendedRecipes = async (macros: Macros) => {
+export const fetchWeightedReccomendedRecipes = async (macros: Macros) => {
   let recipe_recs: RecipeRecommendation[] = [];
   let query = "";
   //calories=200&
@@ -13,7 +13,7 @@ export const fetchReccomendedRecipes = async (macros: Macros) => {
     query += `${name}=${value}&`;
   }
   console.log(query);
-  const response = await fetch(`${BASE_URL}/recommend-by-nutrition?${query}`);
+  const response = await fetch(`${BASE_URL}/recommend-by-weighted_nutrition?${query}`);
   if (!response.ok) throw new Error("Failed to fetch recipes");
 
   const json: any = await response.json();
@@ -43,3 +43,44 @@ export const fetchRecipe = async (recipeName: string) => {
 
   return response;
 }
+
+export const fetchFullRecipe = async (recipeName: string): Promise<FullRecipe> => {
+  const response = await fetch(`${BASE_URL}/recipe/${recipeName}`);
+  if (!response.ok) throw new Error("Failed to fetch recipe");
+  return await response.json();
+};
+
+export const fetchClusters = async (): Promise<Cluster[]> => {
+  const response = await fetch(`${BASE_URL}/clusters`);
+  if (!response.ok) throw new Error("Failed to fetch clusters");
+  return await response.json();
+};
+
+export const fetchClusterRecipes = async (clusterId: number): Promise<FullRecipe[]> => {
+  const response = await fetch(`${BASE_URL}/clusters/${clusterId}`);
+  if (!response.ok) throw new Error("Failed to fetch cluster recipes");
+  return await response.json();
+};
+
+export const fetchAllRecipes = async (): Promise<FullRecipe[]> => {
+  
+  const clusters = await fetchClusters();
+  let allRecipes: FullRecipe[] = [];
+  for (const cluster of clusters) {
+    const recipes = await fetchClusterRecipes(cluster.Cluster);
+    allRecipes = [...allRecipes, ...recipes];
+  }
+  return allRecipes;
+};
+
+export const fullRecipeToCardType = (recipe: FullRecipe): RecipeCardType => {
+  return {
+    name: recipe.Name,
+    macros: [
+      { Cal: Number(recipe.Calories) },
+      { Pro: Number(recipe.Protein) },
+      { Carbs: Number(recipe.Carbohydrates) },
+    ],
+    clusterName: recipe.Cluster_Name,
+  };
+};

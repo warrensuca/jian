@@ -1,3 +1,4 @@
+'use client'
 import Divider from "../../components/ui/Divider";
 import RecipeCard from "../../components/ui/RecipeCard";
 import { Slider } from "@/components/shadcn/slider";
@@ -6,7 +7,7 @@ import { space_grotesk, space_mono, roboto_mono } from "@/lib/fonts";
 import Link from "next/link";
 import { useState, useRef } from "react";
 import { Macros, RecipeCardType, RecipeRecommendation } from "@/types";
-import { fetchReccomendedRecipes, fetchRecipe } from "@/api/recipeAPI";
+import { fetchWeightedReccomendedRecipes, fetchRecipe } from "@/api/recipeAPI";
 import sleep from "@/lib/utils";
 
 function MacroMatcher() {
@@ -22,7 +23,7 @@ function MacroMatcher() {
   const [matchedRecipes, setMatchedRecipes] = useState<RecipeCardType[]>([]);
   const submitted = useRef<Boolean>(false);
   return (
-    <div className="flex flex-col bg-background w-[80rem] px-[20rem]">
+    <div className="flex flex-col items-start bg-background w-full px-[15rem] border">
       <div className="flex flex-col px-[2rem] py-[3.5rem] max-w-[31.25rem] h-[17.0625rem] gap-[1rem]">
         <p className={`text-sm ${roboto_mono.className} text-[#4A7865]`}>
           TRACK 01 — MACRO MATCHER
@@ -40,8 +41,8 @@ function MacroMatcher() {
         </p>
       </div>
 
-      <div className="flex justify-evenly w-[62rem] ">
-        <div className="flex flex-1 flex-col px-[0.5rem] gap-[2rem] px-[2rem] py-[2.5rem] border border-l-0 border-solid border-[#B8B8B8] border-1">
+      <div className="flex justify-evenly w-full max-w-7xl mx-auto ">
+        <div className="flex flex-1 flex-col px-[0.5rem] gap-[2rem] px-[2rem] py-[2.5rem] border border-l-0 border-solid border-[#B8B8B8] ">
           <p className="text-sm text-muted-foreground">CONTROL PANEL</p>
 
           <div className="flex flex-col gap-5">
@@ -158,7 +159,7 @@ function MacroMatcher() {
                   sugar: sugar[0],
                 };
                 const recipes: RecipeRecommendation[] =
-                  await fetchReccomendedRecipes(macros);
+                  await fetchWeightedReccomendedRecipes(macros);
                 const fetchedRecipes: RecipeCardType[] = [];
                 await new Promise((resolve) => setTimeout(resolve, 600));
                 for (const r of recipes.slice(0, 3)) {
@@ -207,7 +208,7 @@ function MacroMatcher() {
             </Button>
           </div>
         </div>
-        <div className="flex flex-1 flex-col px-[0.5rem] gap-[2rem] px-[2rem] py-[2.5rem] rounded-border border-l-0 border-r-0 border-solid border-[#B8B8B8] border-1">
+        <div className="flex flex-1 flex-col px-[0.5rem] gap-[2rem] px-[2rem] py-[2.5rem]  border-l-0 border-r-0 border-solid border-[#B8B8B8] border-1">
           <p className="text-sm text-muted-foreground">CLUSTER REVEAL</p>
           <div className="flex flex-col gap-[1rem] p-[1.5rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
             <p className={`text-sm ${roboto_mono.className} text-[#4A7865]`}>
@@ -232,14 +233,14 @@ function MacroMatcher() {
               <p
                 className={`text-sm text-muted-foreground ${space_grotesk.className} font-medium`}
               >
-                {`Browse all in `}
+                {`Browse all in ${cluster}`}
               </p>
             </Link>
           </div>
         </div>
       </div>
       {submitted && (
-        <div className="flex gap-4 py-[2rem]">
+        <div className="flex gap-[1rem] py-[2rem]">
           {matchedRecipes.map((recipe: RecipeCardType) => {
             
             return <RecipeCard key={recipe.name} {...recipe} />;

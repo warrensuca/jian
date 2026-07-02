@@ -1,7 +1,7 @@
 import Link from "next/link";
 function Navbar() {
   return (
-    <nav className="flex justify-between items-center w-full h-[57px] px-[320px] bg-background">
+    <nav className="flex justify-between items-center  w-full px-[15rem] h-14.25  bg-background border border-l-0 border-r-0  border-t-0 border-solid">
       <svg
         width="78"
         height="24"
@@ -15,17 +15,17 @@ function Navbar() {
         />
       </svg>
 
-      <div className="flex justify-between w-[372px] h-[22px] text-muted-foreground justify-between whitespace-nowrap gap-[32px]">
-        <Link href="/">
-          <p className="text-sm">Macro Matcher</p>
+      <div className="flex justify-between w-93 h-5.5 text-muted-foreground whitespace-nowrap gap-8">
+        <Link href="/macro-matcher">
+          <p className="text-sm hover:text-foreground transition-colors">Macro Matcher</p>
         </Link>
 
-        <Link href="/">
-          <p className="text-sm">Recipe Search</p>
+        <Link href="/recipe-search">
+          <p className="text-sm hover:text-foreground transition-colors">Recipe Search</p>
         </Link>
 
-        <Link href="/">
-          <p className="text-sm">Cluster Explorer</p>
+        <Link href="/cluster-explorer">
+          <p className="text-sm hover:text-foreground transition-colors">Cluster Explorer</p>
         </Link>
       </div>
     </nav>
