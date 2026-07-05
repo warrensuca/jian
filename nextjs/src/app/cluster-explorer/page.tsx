@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Cluster } from "@/types";
 import { fetchClusters } from "@/api/recipeAPI";
-
+import { motion } from "motion/react";
 function ClusterCard({ cluster, index }: { cluster: Cluster; index: number }) {
   return (
     <Link href={`/cluster-explorer/${cluster.Cluster}`}>
@@ -104,11 +104,18 @@ function ClusterExplorer() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-[2rem]">
             {clusters.map((cluster, index) => (
-              <ClusterCard
+              <motion.div
                 key={cluster.Cluster}
-                cluster={cluster}
-                index={index}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{
+                  duration: 0.35,
+                  ease: "easeOut",
+                }}
+              >
+                <ClusterCard cluster={cluster} index={index} />
+              </motion.div>
             ))}
           </div>
         )}

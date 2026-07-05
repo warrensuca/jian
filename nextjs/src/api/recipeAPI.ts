@@ -36,16 +36,9 @@ export const fetchWeightedReccomendedRecipes = async (macros: Macros) => {
   return recipe_recs;
 };
 
-export const fetchRecipe = async (recipeName: string) => {
-  
-  const response = await fetch(`${BASE_URL}/recipe/${recipeName}`);
-  if (!response.ok) throw new Error("Failed to fetch recipes");
-
-  return response;
-}
 
 export const fetchFullRecipe = async (recipeName: string): Promise<FullRecipe> => {
-  const response = await fetch(`${BASE_URL}/recipe/${recipeName}`);
+  const response = await fetch(`${BASE_URL}/recipes/${recipeName}`);
   if (!response.ok) throw new Error("Failed to fetch recipe");
   return await response.json();
 };
@@ -64,13 +57,9 @@ export const fetchClusterRecipes = async (clusterId: number): Promise<FullRecipe
 
 export const fetchAllRecipes = async (): Promise<FullRecipe[]> => {
   
-  const clusters = await fetchClusters();
-  let allRecipes: FullRecipe[] = [];
-  for (const cluster of clusters) {
-    const recipes = await fetchClusterRecipes(cluster.Cluster);
-    allRecipes = [...allRecipes, ...recipes];
-  }
-  return allRecipes;
+  const response = await fetch(`${BASE_URL}/recipes`);
+  if (!response.ok) throw new Error("Failed to fetch all recipes");
+  return await response.json();
 };
 
 export const fullRecipeToCardType = (recipe: FullRecipe): RecipeCardType => {

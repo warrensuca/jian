@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import Divider from "../../components/ui/Divider";
 import RecipeCard from "../../components/ui/RecipeCard";
 import { Slider } from "@/components/shadcn/slider";
@@ -7,8 +7,12 @@ import { space_grotesk, space_mono, roboto_mono } from "@/lib/fonts";
 import Link from "next/link";
 import { useState, useRef } from "react";
 import { Macros, RecipeCardType, RecipeRecommendation } from "@/types";
-import { fetchWeightedReccomendedRecipes, fetchRecipe } from "@/api/recipeAPI";
+import {
+  fetchWeightedReccomendedRecipes,
+  fetchFullRecipe,
+} from "@/api/recipeAPI";
 import sleep from "@/lib/utils";
+import { motion, AnimatePresence } from "motion/react";
 
 function MacroMatcher() {
   const [calories, setCalories] = useState([200]);
@@ -19,9 +23,53 @@ function MacroMatcher() {
   const [sodium, setSodium] = useState([500]);
   const [sugar, setSugar] = useState([20]);
 
-  const [cluster, setCluster] = useState("Not Found");
+  const [cluster, setCluster] = useState("Not Submitted");
   const [matchedRecipes, setMatchedRecipes] = useState<RecipeCardType[]>([]);
   const submitted = useRef<Boolean>(false);
+  const [submitKey, setSubmitKey] = useState(0);
+
+  const nameToNum: {
+    [key: string]: number;
+    "Light Sides & Soups": number;
+    "Rich Meat Mains": number;
+    "Deserts & Sweets": number;
+    "Balanced Carb-Mains": number;
+    "Low-Carb Proteins": number;
+  } = {
+    "Light Sides & Soups": 0,
+    "Rich Meat Mains": 1,
+    "Deserts & Sweets": 2,
+    "Balanced Carb-Mains": 3,
+    "Low-Carb Proteins": 4,
+  };
+
+  const nameToDescription: {
+  [key: string]: string;
+  "Light Sides & Soups": string;
+  "Rich Meat Mains": string;
+  "Desserts & Sweets": string;
+  "Balanced Carb-Mains": string;
+  "Low-Carb Proteins": string;
+} = {
+  "Light Sides & Soups":
+    "Light, nourishing dishes with lower calories and sodium. Great for recovery meals, lighter lunches, or days when you want to stay fueled without feeling weighed down.",
+
+  "Rich Meat Mains":
+    "Hearty, protein-rich entrées centered around beef, pork, or other flavorful meats. Ideal for post-workout recovery/fuel, bulking phases, or satisfying high-energy meals.",
+
+  "Desserts & Sweets":
+    "Sweet treats and pastries that prioritize flavor over performance nutrition. Perfect for celebrations, cheat meals, or enjoying Chinese desserts in moderation.",
+
+  "Balanced Carb-Mains":
+    "Well-rounded rice and noodle dishes that provide a balanced mix of carbohydrates, protein, and fats. Excellent everyday meals for sustained energy and athletic performance.",
+
+  "Low-Carb Proteins":
+    "Lean, protein-forward dishes with fewer carbohydrates. Best suited for high-protein diets, cutting phases, or anyone looking to maximize protein intake while keeping calories in check.",
+};
+  const blurVariants = {
+    hidden: { opacity: 0, filter: "blur(10px)", scale: 0.98 },
+    visible: { opacity: 1, filter: "blur(0px)", scale: 1 },
+  };
   return (
     <div className="flex flex-col items-start bg-background w-full px-[15rem] border">
       <div className="flex flex-col px-[2rem] py-[3.5rem] max-w-[31.25rem] h-[17.0625rem] gap-[1rem]">
@@ -141,13 +189,16 @@ function MacroMatcher() {
               max={100}
               step={1}
             />
-            
-            <Button
+
+            <motion.button
               type="submit"
-              className="bg-transparent border-px border-muted-foreground hover:bg-[#4A7865]"
+              className="bg-transparent border border-solid border-muted-foreground hover:bg-[#4A7865]"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
               onClick={async () => {
-                
                 submitted.current = true;
+
                 console.log("here");
                 const macros: Macros = {
                   calories: calories[0],
@@ -155,7 +206,7 @@ function MacroMatcher() {
                   carbohydrates: carbs[0],
                   fat: fat[0],
                   saturated_fat: satFat[0],
-                  sodium: sodium[0],
+                  sodium: sodium[0] / 1000,
                   sugar: sugar[0],
                 };
                 const recipes: RecipeRecommendation[] =
@@ -163,10 +214,11 @@ function MacroMatcher() {
                 const fetchedRecipes: RecipeCardType[] = [];
                 await new Promise((resolve) => setTimeout(resolve, 600));
                 for (const r of recipes.slice(0, 3)) {
-                  {await new Promise(resolve => setTimeout(resolve, 600))}
+                  {
+                    await new Promise((resolve) => setTimeout(resolve, 600));
+                  }
                   try {
-                    const recipe = await fetchRecipe(r.name);
-                    const recipeData = await recipe.json();
+                    const recipeData = await fetchFullRecipe(r.name);
 
                     fetchedRecipes.push({
                       name: recipeData.Name,
@@ -179,75 +231,105 @@ function MacroMatcher() {
                     });
 
                     // stagger requests to avoid 429 Rate Limits
-                    
                   } catch (error) {
                     console.error("Error fetching individual recipe:", error);
                   }
-
                 }
 
                 // find nearest cluster
                 let counts: Record<string, number> = {
-                    'Light Sides & Soups' : 0,
-                    'Rich Meat Mains': 0,
-                    'Desserts & Sweets': 0,
-                    'Balanced Carb-Mains': 0,
-                    'Low-Carb Proteins': 0
-                }
-                for (const r of recipes){
+                  "Light Sides & Soups": 0,
+                  "Rich Meat Mains": 0,
+                  "Desserts & Sweets": 0,
+                  "Balanced Carb-Mains": 0,
+                  "Low-Carb Proteins": 0,
+                };
+                for (const r of recipes) {
                   counts[r.clusterName] = (counts[r.clusterName] || 0) + 1;
                 }
 
-                console.log(counts)
-                setCluster(Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b))
+                console.log(counts);
+                setCluster(
+                  Object.keys(counts).reduce((a, b) =>
+                    counts[a] > counts[b] ? a : b,
+                  ),
+                );
                 // update state once with all the new recipes added to the existing ones
                 setMatchedRecipes(fetchedRecipes);
+                setSubmitKey((prev) => prev + 1);
               }}
             >
               Submit
-            </Button>
+            </motion.button>
           </div>
         </div>
-        <div className="flex flex-1 flex-col px-[0.5rem] gap-[2rem] px-[2rem] py-[2.5rem]  border-l-0 border-r-0 border-solid border-[#B8B8B8] border-1">
+        <motion.div
+          layout
+          className="flex flex-1 flex-col px-[0.5rem] gap-[2rem] px-[2rem] py-[2.5rem] border-l-0 border-r-0 border-solid border-[#B8B8B8] border-1"
+        >
           <p className="text-sm text-muted-foreground">CLUSTER REVEAL</p>
-          <div className="flex flex-col gap-[1rem] p-[1.5rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
-            <p className={`text-sm ${roboto_mono.className} text-[#4A7865]`}>
-              MATCHED TO CLUSTER
-            </p>
 
-            <p
-              className={`text-3xl ${space_grotesk.className} font-bold text-foreground`}
+          {/* mode="wait" ensures the exit animation finishes before the enter animation starts */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={submitKey}
+              variants={blurVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="flex flex-col gap-[1rem]"
             >
-              {cluster}
-            </p>
+              <div className="flex flex-col gap-[1rem] p-[1.5rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
+                <p
+                  className={`text-sm ${roboto_mono.className} text-[#4A7865]`}
+                >
+                  MATCHED TO CLUSTER
+                </p>
 
-            <p className="text-sm text-muted-foreground text-wrap">
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Natus
-              odio molestiae saepe tenetur dignissimos deleniti optio sapiente
-              minus blanditiis reiciendis.
-            </p>
-          </div>
+                <p
+                  className={`text-3xl ${space_grotesk.className} font-bold ${cluster === "Not Submitted" ? "text-muted-foreground" : "text-foreground"}`}
+                >
+                  {cluster}
+                </p>
 
-          <div className="flex flex-col gap-[1rem] px-[1rem] py-[0.75rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
-            <Link href="/">
-              <p
-                className={`text-sm text-muted-foreground ${space_grotesk.className} font-medium`}
-              >
-                {`Browse all in ${cluster}`}
-              </p>
-            </Link>
-          </div>
-        </div>
+                <p className="text-sm text-muted-foreground text-wrap">
+                  {nameToDescription[cluster]}
+                </p>
+              </div>
+
+              {cluster !== "Not Submitted" && (
+                <div className="flex flex-col gap-[1rem] px-[1rem] py-[0.75rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
+                  <Link href={`/cluster-explorer/${nameToNum[cluster]}`}>
+                    <p
+                      className={`text-sm text-muted-foreground ${space_grotesk.className} font-medium`}
+                    >
+                      {`Browse all in ${cluster}`}
+                    </p>
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
       </div>
-      {submitted && (
-        <div className="flex gap-[1rem] py-[2rem]">
-          {matchedRecipes.map((recipe: RecipeCardType) => {
-            
-            return <RecipeCard key={recipe.name} {...recipe} />;
-          })}
-        </div>
-      )}
-      <div></div>
+      <AnimatePresence mode="wait">
+        {submitted && (
+          <motion.div
+            key={`recipes-${submitKey}`} // Forces re-render on submit
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={blurVariants}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex gap-[1rem] py-[2rem]"
+          >
+            {matchedRecipes.map((recipe) => (
+              <RecipeCard key={recipe.name} {...recipe} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

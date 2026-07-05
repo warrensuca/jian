@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { FullRecipe } from "@/types";
 import { fetchFullRecipe } from "@/api/recipeAPI";
-
+import Divider from "@/components/ui/Divider";
 function RecipeDetailPage() {
   const params = useParams();
   const recipeName = decodeURIComponent(params.name as string);
@@ -88,7 +88,17 @@ function RecipeDetailPage() {
                     Procedure
                   </h3>
                   <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {recipe.Procedure}
+                    
+                    {JSON.parse(recipe.Procedure.replace(/'/g, '"')).map((step, idx) => (
+                      
+                      <span key={idx} className="mb-1">
+                        {`${idx+1}: ${step.trim()}`}
+                        <Divider width = 'w-full'/>
+                        <br />
+                        </span> 
+
+                    ))}
+                    
                   </div>
                 </div>
               </div>
@@ -122,7 +132,7 @@ function RecipeDetailPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Sodium</span>
-                      <span>{recipe.Sodium}mg</span>
+                      <span>{recipe.Sodium * 1000}mg</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Sugar</span>

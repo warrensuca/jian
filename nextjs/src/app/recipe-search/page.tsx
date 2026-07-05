@@ -4,6 +4,7 @@ import { space_grotesk, roboto_mono } from "@/lib/fonts";
 import { useEffect, useState, useMemo } from "react";
 import { FullRecipe } from "@/types";
 import { fetchAllRecipes, fullRecipeToCardType } from "@/api/recipeAPI";
+import { motion } from "motion/react";
 import RecipeCard from "@/components/ui/RecipeCard";
 
 function RecipeSearchPage() {
@@ -11,6 +12,20 @@ function RecipeSearchPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15, // Delays each child by 0.15s
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0, transition: { type: "spring" as const } },
+  };
   // Fetch all recipes on load
   useEffect(() => {
     async function loadAllRecipes() {
@@ -31,10 +46,11 @@ function RecipeSearchPage() {
     if (!searchQuery) return allRecipes;
 
     const lowerQuery = searchQuery.toLowerCase();
-    return allRecipes.filter((recipe) =>
-      recipe.Name.toLowerCase().includes(lowerQuery) ||
-      recipe.Ingredients_List.toLowerCase().includes(lowerQuery) ||
-      recipe.Cluster_Name.toLowerCase().includes(lowerQuery)
+    return allRecipes.filter(
+      (recipe) =>
+        recipe.Name.toLowerCase().includes(lowerQuery) ||
+        recipe.Ingredients_List.toLowerCase().includes(lowerQuery) ||
+        recipe.Cluster_Name.toLowerCase().includes(lowerQuery),
     );
   }, [allRecipes, searchQuery]);
 
@@ -99,12 +115,22 @@ function RecipeSearchPage() {
                 {filteredRecipes.length} results
               </p>
             </div>
+
+            {/* 1. Added grid classes directly to the motion container */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredRecipes.map((recipe, index) => (
-                <RecipeCard
+                <motion.div
                   key={`${recipe.Name}-${index}`}
-                  {...fullRecipeToCardType(recipe)}
-                />
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{
+                    duration: 0.35,
+                    ease: "easeOut",
+                  }}
+                >
+                  <RecipeCard {...fullRecipeToCardType(recipe)} />
+                </motion.div>
               ))}
             </div>
           </>

@@ -1,7 +1,7 @@
-function Divider() {
+function Divider(width: string) {
     return (
     <hr
-        className="mx-auto my-0 h-px border-0 w-full bg-muted-foreground"
+        className={`mx-auto  h-px border-0 w-${width} `}
         />
     );
 }
