@@ -87,12 +87,12 @@ function RecipeDetailPage() {
                   <h3 className={`text-lg ${space_grotesk.className} font-bold mb-4`}>
                     Procedure
                   </h3>
-                  <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <div className="flex flex-col gap-4 text-sm text-muted-foreground whitespace-pre-wrap">
                     
                     {JSON.parse(recipe.Procedure.replace(/'/g, '"')).map((step: string, idx: number) => (
                       
-                      <span key={idx} className="mb-1">
-                        {`${idx+1}: ${step.trim()}`}
+                      <span key={idx} className="mb-1 my-5">
+                        {`${idx+1}: ${step.trim()} \n`}
                         
                         
                         </span> 
