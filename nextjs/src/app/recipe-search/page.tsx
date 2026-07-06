@@ -11,21 +11,14 @@ function RecipeSearchPage() {
   const [allRecipes, setAllRecipes] = useState<FullRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [displayLimit, setDisplayLimit] = useState(24);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15, // Delays each child by 0.15s
-      },
-    },
-  };
+  // Reset limit when query changes
+  useEffect(() => {
+    setDisplayLimit(24);
+  }, [searchQuery]);
 
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    show: { opacity: 1, x: 0, transition: { type: "spring" as const } },
-  };
+
   // Fetch all recipes on load
   useEffect(() => {
     async function loadAllRecipes() {
@@ -118,7 +111,7 @@ function RecipeSearchPage() {
 
             {/* 1. Added grid classes directly to the motion container */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredRecipes.map((recipe, index) => (
+              {filteredRecipes.slice(0, displayLimit).map((recipe, index) => (
                 <motion.div
                   key={`${recipe.Name}-${index}`}
                   initial={{ opacity: 0, y: 20 }}
@@ -133,6 +126,17 @@ function RecipeSearchPage() {
                 </motion.div>
               ))}
             </div>
+
+            {filteredRecipes.length > displayLimit && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => setDisplayLimit((prev) => prev + 24)}
+                  className={`px-6 py-2 border border-[#B8B8B8] hover:bg-[#F8F6F3] transition-colors text-sm font-medium ${space_grotesk.className}`}
+                >
+                  Load More
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -37,6 +37,7 @@ export default function RootLayout({
     //<AuthProvider>
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn(
         "h-full",
         "antialiased",

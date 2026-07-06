@@ -1,5 +1,5 @@
 "use client";
-import Divider from "../../components/ui/Divider";
+
 import RecipeCard from "../../components/ui/RecipeCard";
 import { Slider } from "@/components/shadcn/slider";
 import { Button } from "@/components/shadcn/button";
