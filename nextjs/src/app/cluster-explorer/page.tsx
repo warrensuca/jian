@@ -1,10 +1,13 @@
 "use client";
 
-import { space_grotesk, roboto_mono } from "@/lib/fonts";
+//import { space_grotesk, roboto_mono } from "@/lib/fonts";
+import { space_grotesk, roboto_mono } from "../../lib/fonts"
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Cluster } from "@/types";
-import { fetchClusters } from "@/api/recipeAPI";
+//import { Cluster } from "@/types";
+import { Cluster } from '../../types'
+//import { fetchClusters } from "@/api/recipeAPI";
+import { fetchClusters } from "../../api/recipeAPI"
 import { motion } from "motion/react";
 function ClusterCard({ cluster, index }: { cluster: Cluster; index: number }) {
   return (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { space_grotesk, space_mono, roboto_mono } from "@/lib/fonts";
+
 import Image from 'next/image';
 function Navbar() {
   return (

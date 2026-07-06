@@ -1,4 +1,4 @@
-import { RecipeCardType } from "@/types";
+import { RecipeCardType } from "../../types";
 import Link from "next/link";
 import { motion } from "motion/react";
 

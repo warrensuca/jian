@@ -1,17 +1,17 @@
 "use client";
 
 import RecipeCard from "../../components/ui/RecipeCard";
-import { Slider } from "@/components/shadcn/slider";
-import { Button } from "@/components/shadcn/button";
-import { space_grotesk, space_mono, roboto_mono } from "@/lib/fonts";
+import { Slider } from "../../components/shadcn/slider";
+import { Button } from "../../components/shadcn/button";
+import { space_grotesk, space_mono, roboto_mono } from "../../lib/fonts";
 import Link from "next/link";
 import { useState, useRef } from "react";
-import { Macros, RecipeCardType, RecipeRecommendation } from "@/types";
+import { Macros, RecipeCardType, RecipeRecommendation } from "../../types";
 import {
   fetchWeightedReccomendedRecipes,
   fetchFullRecipe,
-} from "@/api/recipeAPI";
-import sleep from "@/lib/utils";
+} from "../../api/recipeAPI";
+
 import { motion, AnimatePresence } from "motion/react";
 
 function MacroMatcher() {

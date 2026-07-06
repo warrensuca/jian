@@ -1,10 +1,10 @@
 "use client";
 
-import { space_grotesk, roboto_mono } from "@/lib/fonts";
+import { space_grotesk, roboto_mono } from "../../../lib/fonts";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { FullRecipe } from "@/types";
-import { fetchFullRecipe } from "@/api/recipeAPI";
+import { FullRecipe } from "../../../types";
+import { fetchFullRecipe } from "../../../api/recipeAPI";
 
 function RecipeDetailPage() {
   const params = useParams();

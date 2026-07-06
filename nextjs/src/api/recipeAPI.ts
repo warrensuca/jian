@@ -1,5 +1,5 @@
-import { Macros, RecipeRecommendation, Cluster, FullRecipe, RecipeCardType } from "@/types";
-
+//import { Macros, RecipeRecommendation, Cluster, FullRecipe, RecipeCardType } from "@/types";
+import { Macros, RecipeRecommendation, Cluster, FullRecipe, RecipeCardType } from "../types"
 
 const BASE_URL = "https://chinese-recipe-api.vercel.app";
 

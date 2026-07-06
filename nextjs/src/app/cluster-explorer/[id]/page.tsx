@@ -1,11 +1,12 @@
 "use client";
 
-import { space_grotesk, roboto_mono } from "@/lib/fonts";
+//import { space_grotesk, roboto_mono } from "@/lib/fonts";
+import { space_grotesk, roboto_mono } from "../../../lib/fonts"
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { FullRecipe } from "@/types";
-import { fetchClusterRecipes, fullRecipeToCardType } from "@/api/recipeAPI";
-import RecipeCard from "@/components/ui/RecipeCard";
+import { FullRecipe } from "../../../types"
+import { fetchClusterRecipes, fullRecipeToCardType } from "../../../api/recipeAPI" //"@/api/recipeAPI";
+import RecipeCard from "../../../components/ui/RecipeCard" //"@/components/ui/RecipeCard";
 
 function ClusterDetailPage() {
   const params = useParams();

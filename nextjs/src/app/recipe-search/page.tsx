@@ -1,11 +1,11 @@
 "use client";
 
-import { space_grotesk, roboto_mono } from "@/lib/fonts";
+import { space_grotesk, roboto_mono } from "../../lib/fonts";
 import { useEffect, useState, useMemo } from "react";
-import { FullRecipe } from "@/types";
-import { fetchAllRecipes, fullRecipeToCardType } from "@/api/recipeAPI";
+import { FullRecipe } from "../../types";
+import { fetchAllRecipes, fullRecipeToCardType } from "../../api/recipeAPI";
 import { motion } from "motion/react";
-import RecipeCard from "@/components/ui/RecipeCard";
+import RecipeCard from "../../components/ui/RecipeCard";
 
 function RecipeSearchPage() {
   const [allRecipes, setAllRecipes] = useState<FullRecipe[]>([]);
