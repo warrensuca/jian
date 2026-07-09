@@ -1,22 +1,37 @@
 "use client";
 
 import { space_grotesk, roboto_mono } from "../../../lib/fonts";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { FullRecipe } from "../../../types";
+import { FullRecipe, RecipeImage } from "../../../types";
 import { fetchFullRecipe } from "../../../api/recipeAPI";
+import { fetchRecipeImage } from "../../../api/imageAPI";
 
 function RecipeDetailPage() {
   const params = useParams();
   const recipeName = decodeURIComponent(params.name as string);
   const [recipe, setRecipe] = useState<FullRecipe | null>(null);
+  const [recipeImage, setRecipeImage] = useState<RecipeImage | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadRecipe() {
+      setLoading(true);
+      setRecipe(null);
+      setRecipeImage(null);
+
       try {
-        const data = await fetchFullRecipe(recipeName);
-        setRecipe(data);
+        const [recipeData, imageData] = await Promise.all([
+          fetchFullRecipe(recipeName),
+          fetchRecipeImage(recipeName).catch((error) => {
+            console.error("Error fetching recipe image:", error);
+            return null;
+          }),
+        ]);
+
+        setRecipe(recipeData);
+        setRecipeImage(imageData);
       } catch (error) {
         console.error("Error fetching recipe:", error);
       } finally {
@@ -37,7 +52,6 @@ function RecipeDetailPage() {
         </div>
       ) : recipe ? (
           <>
-            {console.log(recipe.Ingredients_List)}
             <div className="flex flex-col px-[2rem] py-[3.5rem] max-w-[40rem] gap-[1.5rem]">
               <p className={`text-sm ${roboto_mono.className} text-[#4A7865]`}>
                 TRACK 04 — RECIPE DETAIL
@@ -104,6 +118,25 @@ function RecipeDetailPage() {
               </div>
 
               <div className="md:col-span-1 flex flex-col gap-6">
+                {recipeImage && (
+                  <div className="bg-white border border-[#B8B8B8] p-4">
+                    <div className="relative aspect-[4/3] overflow-hidden border border-[#D9D2C7] bg-[#F8F6F3]">
+                      <Image
+                        src={recipeImage.url}
+                        alt={`${recipe.Name} recipe image`}
+                        fill
+                        sizes="(min-width: 768px) 24rem, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
+                    <p
+                      className={`mt-3 text-xs ${roboto_mono.className} text-muted-foreground`}
+                    >
+                      IMAGE: {recipeImage.source}
+                    </p>
+                  </div>
+                )}
+
                 {/* Nutrition */}
                 <div className="bg-white border border-[#B8B8B8] p-6">
                   <h3 className={`text-lg ${space_grotesk.className} font-bold mb-4`}>

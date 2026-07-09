@@ -49,3 +49,7 @@ export interface FullRecipe {
   Source: string;
 }
 
+export interface RecipeImage {
+  url: string;
+  source: string;
+}

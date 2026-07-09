@@ -7,17 +7,53 @@ import { fetchAllRecipes, fullRecipeToCardType } from "../../api/recipeAPI";
 import { motion } from "motion/react";
 import RecipeCard from "../../components/ui/RecipeCard";
 
+const SEARCH_TAGS = [
+  "chinese",
+  "korean",
+  "japanese",
+  "thai",
+  "chicken",
+  "beef",
+  "pork",
+  "rice",
+  "noodle",
+  "spicy",
+  "sweet",
+  "kimchi",
+];
+
+const getSearchTerms = (query: string) =>
+  query
+    .toLowerCase()
+    .split(/[\s,]+/)
+    .map((term) => term.trim())
+    .filter(Boolean);
+
 function RecipeSearchPage() {
   const [allRecipes, setAllRecipes] = useState<FullRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [displayLimit, setDisplayLimit] = useState(24);
 
-  // Reset limit when query changes
-  useEffect(() => {
-    setDisplayLimit(24);
-  }, [searchQuery]);
+  const selectedTags = useMemo(
+    () => new Set(getSearchTerms(searchQuery)),
+    [searchQuery],
+  );
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setDisplayLimit(24);
+  };
+
+  const handleTagClick = (tag: string) => {
+    const searchTerms = getSearchTerms(searchQuery);
+    const nextTerms = selectedTags.has(tag)
+      ? searchTerms.filter((term) => term !== tag)
+      : [...searchTerms, tag];
+
+    setSearchQuery(nextTerms.join(" "));
+    setDisplayLimit(24);
+  };
 
   // Fetch all recipes on load
   useEffect(() => {
@@ -38,13 +74,20 @@ function RecipeSearchPage() {
   const filteredRecipes = useMemo(() => {
     if (!searchQuery) return allRecipes;
 
-    const lowerQuery = searchQuery.toLowerCase();
-    return allRecipes.filter(
-      (recipe) =>
-        recipe.Name.toLowerCase().includes(lowerQuery) ||
-        recipe.Ingredients_List.toLowerCase().includes(lowerQuery) ||
-        recipe.Cluster_Name.toLowerCase().includes(lowerQuery),
-    );
+    const searchTerms = getSearchTerms(searchQuery);
+    if (!searchTerms.length) return allRecipes;
+
+    return allRecipes.filter((recipe) => {
+      const searchableRecipe = [
+        recipe.Name,
+        recipe.Ingredients_List,
+        recipe.Cluster_Name,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchTerms.every((term) => searchableRecipe.includes(term));
+    });
   }, [allRecipes, searchQuery]);
 
   return (
@@ -91,10 +134,36 @@ function RecipeSearchPage() {
               type="text"
               placeholder="Search by recipe, ingredient, or cluster..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground"
             />
           </div>
+        </div>
+
+        <div
+          className="flex flex-wrap gap-2 pt-1"
+          aria-label="Featured search tags"
+        >
+          {SEARCH_TAGS.map((tag) => {
+            const isSelected = selectedTags.has(tag);
+
+            return (
+              <button
+                key={tag}
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={`${isSelected ? "Remove" : "Add"} ${tag} search tag`}
+                onClick={() => handleTagClick(tag)}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                  isSelected
+                    ? "border-[#4A7865] bg-[#4A7865] text-white"
+                    : "border-[#B8B8B8] bg-white text-foreground hover:bg-[#F8F6F3] hover:text-[#4A7865]"
+                }`}
+              >
+                {tag}
+              </button>
+            );
+          })}
         </div>
       </div>
 
