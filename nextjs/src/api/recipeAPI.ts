@@ -9,8 +9,12 @@ export const fetchWeightedReccomendedRecipes = async (macros: Macros) => {
   //calories=200&
   for (const [name, value] of Object.entries(macros)) {
     const typedName = name as keyof typeof macros;
+    console.log(name, value)
+    if(value){
+      query += `${name}=${value}&`;
+    }
 
-    query += `${name}=${value}&`;
+      
   }
   console.log(query);
   const response = await fetch(`${BASE_URL}/recommend-by-weighted_nutrition?${query}`);

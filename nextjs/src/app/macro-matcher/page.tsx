@@ -23,6 +23,14 @@ function MacroMatcher() {
   const [sodium, setSodium] = useState([500]);
   const [sugar, setSugar] = useState([20]);
 
+  const [caloriesisDisabled, setCaloriesisDisabled] = useState(false);
+  const [proteinisDisabled, setProteinisDisabled] = useState(false);
+  const [carbsisDisabled, setCarbsisDisabled] = useState(false);
+  const [fatisDisabled, setFatisDisabled] = useState(false);
+  const [satFatisDisabled, setSatFatisDisabled] = useState(false); // Fixed typo here
+  const [sodiumisDisabled, setSodiumisDisabled] = useState(false);
+  const [sugarisDisabled, setSugarisDisabled] = useState(false);
+
   const [cluster, setCluster] = useState("Not Submitted");
   const [matchedRecipes, setMatchedRecipes] = useState<RecipeCardType[]>([]);
   const submitted = useRef<Boolean>(false);
@@ -44,32 +52,33 @@ function MacroMatcher() {
   };
 
   const nameToDescription: {
-  [key: string]: string;
-  "Light Sides & Soups": string;
-  "Rich Meat Mains": string;
-  "Desserts & Sweets": string;
-  "Balanced Carb-Mains": string;
-  "Low-Carb Proteins": string;
-} = {
-  "Light Sides & Soups":
-    "Light, nourishing dishes with lower calories and sodium. Great for recovery meals, lighter lunches, or days when you want to stay fueled without feeling weighed down.",
+    [key: string]: string;
+    "Light Sides & Soups": string;
+    "Rich Meat Mains": string;
+    "Desserts & Sweets": string;
+    "Balanced Carb-Mains": string;
+    "Low-Carb Proteins": string;
+  } = {
+    "Light Sides & Soups":
+      "Light, nourishing dishes with lower calories and sodium. Great for recovery meals, lighter lunches, or days when you want to stay fueled without feeling weighed down.",
 
-  "Rich Meat Mains":
-    "Hearty, protein-rich entrées centered around beef, pork, or other flavorful meats. Ideal for post-workout recovery/fuel, bulking phases, or satisfying high-energy meals.",
+    "Rich Meat Mains":
+      "Hearty, protein-rich entrées centered around beef, pork, or other flavorful meats. Ideal for post-workout recovery/fuel, bulking phases, or satisfying high-energy meals.",
 
-  "Desserts & Sweets":
-    "Sweet treats and pastries that prioritize flavor over performance nutrition. Perfect for celebrations, cheat meals, or enjoying Chinese desserts in moderation.",
+    "Desserts & Sweets":
+      "Sweet treats and pastries that prioritize flavor over performance nutrition. Perfect for celebrations, cheat meals, or enjoying Chinese desserts in moderation.",
 
-  "Balanced Carb-Mains":
-    "Well-rounded rice and noodle dishes that provide a balanced mix of carbohydrates, protein, and fats. Excellent everyday meals for sustained energy and athletic performance.",
+    "Balanced Carb-Mains":
+      "Well-rounded rice and noodle dishes that provide a balanced mix of carbohydrates, protein, and fats. Excellent everyday meals for sustained energy and athletic performance.",
 
-  "Low-Carb Proteins":
-    "Lean, protein-forward dishes with fewer carbohydrates. Best suited for high-protein diets, cutting phases, or anyone looking to maximize protein intake while keeping calories in check.",
-};
+    "Low-Carb Proteins":
+      "Lean, protein-forward dishes with fewer carbohydrates. Best suited for high-protein diets, cutting phases, or anyone looking to maximize protein intake while keeping calories in check.",
+  };
   const blurVariants = {
     hidden: { opacity: 0, filter: "blur(10px)", scale: 0.98 },
     visible: { opacity: 1, filter: "blur(0px)", scale: 1 },
   };
+
   return (
     <div className="flex flex-col items-start bg-background w-full px-[15rem] border">
       <div className="flex flex-col px-[2rem] py-[3.5rem] max-w-[31.25rem] h-[17.0625rem] gap-[1rem]">
@@ -90,125 +99,168 @@ function MacroMatcher() {
       </div>
 
       <div className="flex justify-evenly w-full max-w-7xl mx-auto ">
-        <div className="flex flex-1 flex-col px-[0.5rem] gap-[2rem] px-[2rem] py-[2.5rem] border border-l-0 border-solid border-[#B8B8B8] ">
+        <div className="flex flex-1 flex-col gap-[2rem] px-[2.5rem] py-[2.5rem] border border-l-0 border-solid border-[#B8B8B8] ">
           <p className="text-sm text-muted-foreground">CONTROL PANEL</p>
 
+          {/* CALORIES */}
           <div className="flex flex-col gap-5">
             <div className="flex justify-between">
-              <p className="text-xs text-foreground">Calories</p>
+              <button
+                className={`${caloriesisDisabled ? "line-through text-muted-foreground" : "hover:line-through"}`}
+                onClick={() => setCaloriesisDisabled(!caloriesisDisabled)}
+              >
+                <p className="text-xs text-foreground">Calories</p>
+              </button>
               <p className="text-xs text-accent">{`${calories}kcals`}</p>
             </div>
-
             <Slider
               value={calories}
               onValueChange={(newValue) => setCalories(newValue)}
               max={1000}
               step={1}
+              disabled={caloriesisDisabled}
             />
           </div>
 
+          {/* PROTEIN */}
           <div className="flex flex-col gap-5">
             <div className="flex justify-between">
-              <p className="text-xs text-foreground">Protein</p>
+              <button
+                className={`${proteinisDisabled ? "line-through text-muted-foreground" : "hover:line-through"}`}
+                onClick={() => setProteinisDisabled(!proteinisDisabled)}
+              >
+                <p className="text-xs text-foreground">Protein</p>
+              </button>
               <p className="text-xs text-accent">{`${protein}g`}</p>
             </div>
-
             <Slider
               value={protein}
               onValueChange={(newValue) => setProtein(newValue)}
               max={100}
               step={1}
+              disabled={proteinisDisabled}
             />
           </div>
 
+          {/* CARBOHYDRATES */}
           <div className="flex flex-col gap-5">
             <div className="flex justify-between">
-              <p className="text-xs text-foreground">Carbohydrates</p>
+              <button
+                className={`${carbsisDisabled ? "line-through text-muted-foreground" : "hover:line-through"}`}
+                onClick={() => setCarbsisDisabled(!carbsisDisabled)}
+              >
+                <p className="text-xs text-foreground">Carbohydrates</p>
+              </button>
               <p className="text-xs text-accent">{`${carbs}g`}</p>
             </div>
-
             <Slider
               value={carbs}
               onValueChange={(newValue) => setCarbs(newValue)}
               max={200}
               step={1}
+              disabled={carbsisDisabled}
             />
           </div>
 
+          {/* FAT */}
           <div className="flex flex-col gap-5">
             <div className="flex justify-between">
-              <p className="text-xs text-foreground">Fat</p>
+              <button
+                className={`${fatisDisabled ? "line-through text-muted-foreground" : "hover:line-through"}`}
+                onClick={() => setFatisDisabled(!fatisDisabled)}
+              >
+                <p className="text-xs text-foreground">Fat</p>
+              </button>
               <p className="text-xs text-accent">{`${fat}g`}</p>
             </div>
-
             <Slider
               value={fat}
               onValueChange={(newValue) => setFat(newValue)}
               max={100}
               step={1}
+              disabled={fatisDisabled}
             />
           </div>
 
+          {/* SATURATED FAT */}
           <div className="flex flex-col gap-5">
             <div className="flex justify-between">
-              <p className="text-xs text-foreground">Saturated Fat</p>
+              <button
+                className={`${satFatisDisabled ? "line-through text-muted-foreground" : "hover:line-through"}`}
+                onClick={() => setSatFatisDisabled(!satFatisDisabled)}
+              >
+                <p className="text-xs text-foreground">Saturated Fat</p>
+              </button>
               <p className="text-xs text-accent">{`${satFat}g`}</p>
             </div>
-
             <Slider
               value={satFat}
               onValueChange={(newValue) => setSatFat(newValue)}
               max={50}
               step={1}
+              disabled={satFatisDisabled}
             />
           </div>
 
+          {/* SODIUM */}
           <div className="flex flex-col gap-5">
             <div className="flex justify-between">
-              <p className="text-xs text-foreground">Sodium</p>
+              <button
+                className={`${sodiumisDisabled ? "line-through text-muted-foreground" : "hover:line-through"}`}
+                onClick={() => setSodiumisDisabled(!sodiumisDisabled)}
+              >
+                <p className="text-xs text-foreground">Sodium</p>
+              </button>
               <p className="text-xs text-accent">{`${sodium}mg`}</p>
             </div>
-
             <Slider
               value={sodium}
               onValueChange={(newValue) => setSodium(newValue)}
               max={2500}
               step={1}
+              disabled={sodiumisDisabled}
             />
           </div>
 
+          {/* SUGAR */}
           <div className="flex flex-col gap-5">
             <div className="flex justify-between">
-              <p className="text-xs text-foreground">Sugar</p>
+              <button
+                className={`${sugarisDisabled ? "line-through text-muted-foreground" : "hover:line-through"}`}
+                onClick={() => setSugarisDisabled(!sugarisDisabled)}
+              >
+                <p className="text-xs text-foreground">Sugar</p>
+              </button>
               <p className="text-xs text-accent">{`${sugar}g`}</p>
             </div>
-
             <Slider
               value={sugar}
               onValueChange={(newValue) => setSugar(newValue)}
               max={100}
               step={1}
+              disabled={sugarisDisabled}
             />
 
             <motion.button
               type="submit"
-              className="bg-transparent border border-solid border-muted-foreground hover:bg-[#4A7865]"
+              className="bg-transparent border border-solid border-muted-foreground hover:bg-[#4A7865] mt-4"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
               onClick={async () => {
                 submitted.current = true;
 
-                console.log("here");
+                // Send null for disabled values
                 const macros: Macros = {
-                  calories: calories[0],
-                  protein: protein[0],
-                  carbohydrates: carbs[0],
-                  fat: fat[0],
-                  saturated_fat: satFat[0],
-                  sodium: sodium[0] / 1000,
-                  sugar: sugar[0],
+                  calories: caloriesisDisabled ? null : calories[0],
+                  protein: proteinisDisabled ? null : protein[0],
+                  carbohydrates: carbsisDisabled ? null : carbs[0],
+                  fat: fatisDisabled ? null : fat[0],
+                  saturated_fat: satFatisDisabled ? null : satFat[0],
+                  sodium: sodiumisDisabled ? null : sodium[0] / 1000,
+                  sugar: sugarisDisabled ? null : sugar[0],
                 };
+
                 const recipes: RecipeRecommendation[] =
                   await fetchWeightedReccomendedRecipes(macros);
                 const fetchedRecipes: RecipeCardType[] = [];
@@ -229,8 +281,6 @@ function MacroMatcher() {
                       ] as Record<string, number>[],
                       clusterName: recipeData.Cluster_Name,
                     });
-
-                    // stagger requests to avoid 429 Rate Limits
                   } catch (error) {
                     console.error("Error fetching individual recipe:", error);
                   }
@@ -248,7 +298,6 @@ function MacroMatcher() {
                   counts[r.clusterName] = (counts[r.clusterName] || 0) + 1;
                 }
 
-                console.log(counts);
                 setCluster(
                   Object.keys(counts).reduce((a, b) =>
                     counts[a] > counts[b] ? a : b,
@@ -263,13 +312,13 @@ function MacroMatcher() {
             </motion.button>
           </div>
         </div>
+
         <motion.div
           layout
-          className="flex flex-1 flex-col px-[0.5rem] gap-[2rem] px-[2rem] py-[2.5rem] border-l-0 border-r-0 border-solid border-[#B8B8B8] border-1"
+          className="flex flex-1 flex-col gap-[2rem] px-[2.5rem] py-[2.5rem] border-l-0 border-r-0 border-solid border-[#B8B8B8] border-1"
         >
           <p className="text-sm text-muted-foreground">CLUSTER REVEAL</p>
 
-          {/* mode="wait" ensures the exit animation finishes before the enter animation starts */}
           <AnimatePresence mode="wait">
             <motion.div
               key={submitKey}
@@ -316,7 +365,7 @@ function MacroMatcher() {
       <AnimatePresence mode="wait">
         {submitted && (
           <motion.div
-            key={`recipes-${submitKey}`} // Forces re-render on submit
+            key={`recipes-${submitKey}`}
             initial="hidden"
             animate="visible"
             exit="hidden"
