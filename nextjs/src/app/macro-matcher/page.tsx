@@ -2,10 +2,9 @@
 
 import RecipeCard from "../../components/ui/RecipeCard";
 import { Slider } from "../../components/shadcn/slider";
-import { Button } from "../../components/shadcn/button";
-import { space_grotesk, space_mono, roboto_mono } from "../../lib/fonts";
+import { space_grotesk, roboto_mono } from "../../lib/fonts";
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Macros, RecipeCardType, RecipeRecommendation } from "../../types";
 import {
   fetchWeightedReccomendedRecipes,
@@ -13,6 +12,108 @@ import {
 } from "../../api/recipeAPI";
 
 import { motion, AnimatePresence } from "motion/react";
+
+const RANGE_TAGS = ["bulking", "cutting", "healthy", "energy", "snack"] as const;
+
+type RangeTag = (typeof RANGE_TAGS)[number];
+type MacroRangeKey =
+  | "calories"
+  | "protein"
+  | "carbohydrates"
+  | "fat"
+  | "saturated_fat"
+  | "sodium"
+  | "sugar";
+
+const RANGE_TAG_LABELS: Record<RangeTag, string> = {
+  bulking: "Bulking",
+  cutting: "Cutting",
+  healthy: "Healthy",
+  energy: "Energy",
+  snack: "Snack"
+};
+
+const RECOMMENDED_RANGES: Record<
+  RangeTag,
+  Record<MacroRangeKey, { min: number; max: number; unit: string }>
+> = {
+  // Rounded interquartile ranges from clustered_recipes.csv profile slices.
+  bulking: {
+    calories: { min: 390, max: 560, unit: "kcals" },
+    protein: { min: 20, max: 35, unit: "g" },
+    carbohydrates: { min: 40, max: 80, unit: "g" },
+    fat: { min: 12, max: 25, unit: "g" },
+    saturated_fat: { min: 4, max: 10, unit: "g" },
+    sodium: { min: 600, max: 1000, unit: "mg" },
+    sugar: { min: 2, max: 9, unit: "g" },
+  },
+  cutting: {
+    calories: { min: 200, max: 400, unit: "kcals" },
+    protein: { min: 15, max: 25, unit: "g" },
+    carbohydrates: { min: 5, max: 15, unit: "g" },
+    fat: { min: 7, max: 13, unit: "g" },
+    saturated_fat: { min: 1, max: 3, unit: "g" },
+    sodium: { min: 400, max: 850, unit: "mg" },
+    sugar: { min: 1, max: 4, unit: "g" },
+  },
+  healthy: {
+    calories: { min: 250, max: 450, unit: "kcals" },
+    protein: { min: 15, max: 40, unit: "g" },
+    carbohydrates: { min: 20, max: 45, unit: "g" },
+    fat: { min: 8, max: 18, unit: "g" },
+    saturated_fat: { min: 1, max: 3, unit: "g" },
+    sodium: { min: 300, max: 450, unit: "mg" },
+    sugar: { min: 1, max: 3, unit: "g" },
+  },
+  energy: {
+    calories: { min: 300, max: 430, unit: "kcals" },
+    protein: { min: 5, max: 25, unit: "g" },
+    carbohydrates: { min: 40, max: 100, unit: "g" },
+    fat: { min: 10, max: 17, unit: "g" },
+    saturated_fat: { min: 2, max: 6, unit: "g" },
+    sodium: { min: 350, max: 900, unit: "mg" },
+    sugar: { min: 2, max: 13, unit: "g" },
+  },
+  snack: {
+    calories: { min: 80, max: 200, unit: "kcals" },
+    protein: { min: 5, max: 15, unit: "g" },
+    carbohydrates: { min: 5, max: 15, unit: "g" },
+    fat: { min: 2, max: 13, unit: "g" },
+    saturated_fat: { min: 1, max: 4, unit: "g" },
+    sodium: { min: 50, max: 350, unit: "mg" },
+    sugar: { min: 2, max: 20, unit: "g" },
+  },
+};
+
+function RecommendedRangeTooltip({
+  macro,
+  activeTags,
+}: {
+  macro: MacroRangeKey;
+  activeTags: RangeTag[];
+}) {
+  if (!activeTags.length) return null;
+
+  return (
+    <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-full border border-[#B8B8B8] bg-white px-3 py-2 text-xs opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+      <div className="flex flex-col gap-1">
+        {activeTags.map((tag) => {
+          const range = RECOMMENDED_RANGES[tag][macro];
+
+          return (
+            <div key={tag} className="flex items-center justify-between gap-3">
+              <span className="text-[#4A7865]">{RANGE_TAG_LABELS[tag]}</span>
+              <span className="text-foreground">
+                {range.min}-{range.max}
+                {range.unit}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function MacroMatcher() {
   const [calories, setCalories] = useState([200]);
@@ -33,8 +134,17 @@ function MacroMatcher() {
 
   const [cluster, setCluster] = useState("Not Submitted");
   const [matchedRecipes, setMatchedRecipes] = useState<RecipeCardType[]>([]);
-  const submitted = useRef<Boolean>(false);
+  const [submitted, setSubmitted] = useState(false);
   const [submitKey, setSubmitKey] = useState(0);
+  const [activeRangeTags, setActiveRangeTags] = useState<RangeTag[]>([]);
+
+  const handleRangeTagClick = (tag: RangeTag) => {
+    setActiveRangeTags((currentTags) =>
+      currentTags.includes(tag)
+        ? currentTags.filter((currentTag) => currentTag !== tag)
+        : [...currentTags, tag],
+    );
+  };
 
   const nameToNum: {
     [key: string]: number;
@@ -100,7 +210,31 @@ function MacroMatcher() {
 
       <div className="flex justify-evenly w-full max-w-7xl mx-auto ">
         <div className="flex flex-1 flex-col gap-[2rem] px-[2.5rem] py-[2.5rem] border border-l-0 border-solid border-[#B8B8B8] ">
-          <p className="text-sm text-muted-foreground">CONTROL PANEL</p>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">CONTROL PANEL</p>
+            <div className="flex flex-wrap gap-2" aria-label="Macro range tags">
+              {RANGE_TAGS.map((tag) => {
+                const isSelected = activeRangeTags.includes(tag);
+
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    aria-pressed={isSelected}
+                    aria-label={`${isSelected ? "Remove" : "Add"} ${tag} macro range tag`}
+                    onClick={() => handleRangeTagClick(tag)}
+                    className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                      isSelected
+                        ? "border-[#4A7865] bg-[#4A7865] text-white"
+                        : "border-[#B8B8B8] bg-white text-foreground hover:bg-[#F8F6F3] hover:text-[#4A7865]"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* CALORIES */}
           <div className="flex flex-col gap-5">
@@ -113,13 +247,19 @@ function MacroMatcher() {
               </button>
               <p className="text-xs text-accent">{`${calories}kcals`}</p>
             </div>
-            <Slider
-              value={calories}
-              onValueChange={(newValue) => setCalories(newValue)}
-              max={1000}
-              step={1}
-              disabled={caloriesisDisabled}
-            />
+            <div className="group relative">
+              <Slider
+                value={calories}
+                onValueChange={(newValue) => setCalories(newValue)}
+                max={1000}
+                step={1}
+                disabled={caloriesisDisabled}
+              />
+              <RecommendedRangeTooltip
+                macro="calories"
+                activeTags={activeRangeTags}
+              />
+            </div>
           </div>
 
           {/* PROTEIN */}
@@ -133,13 +273,19 @@ function MacroMatcher() {
               </button>
               <p className="text-xs text-accent">{`${protein}g`}</p>
             </div>
-            <Slider
-              value={protein}
-              onValueChange={(newValue) => setProtein(newValue)}
-              max={100}
-              step={1}
-              disabled={proteinisDisabled}
-            />
+            <div className="group relative">
+              <Slider
+                value={protein}
+                onValueChange={(newValue) => setProtein(newValue)}
+                max={100}
+                step={1}
+                disabled={proteinisDisabled}
+              />
+              <RecommendedRangeTooltip
+                macro="protein"
+                activeTags={activeRangeTags}
+              />
+            </div>
           </div>
 
           {/* CARBOHYDRATES */}
@@ -153,13 +299,19 @@ function MacroMatcher() {
               </button>
               <p className="text-xs text-accent">{`${carbs}g`}</p>
             </div>
-            <Slider
-              value={carbs}
-              onValueChange={(newValue) => setCarbs(newValue)}
-              max={200}
-              step={1}
-              disabled={carbsisDisabled}
-            />
+            <div className="group relative">
+              <Slider
+                value={carbs}
+                onValueChange={(newValue) => setCarbs(newValue)}
+                max={200}
+                step={1}
+                disabled={carbsisDisabled}
+              />
+              <RecommendedRangeTooltip
+                macro="carbohydrates"
+                activeTags={activeRangeTags}
+              />
+            </div>
           </div>
 
           {/* FAT */}
@@ -173,13 +325,16 @@ function MacroMatcher() {
               </button>
               <p className="text-xs text-accent">{`${fat}g`}</p>
             </div>
-            <Slider
-              value={fat}
-              onValueChange={(newValue) => setFat(newValue)}
-              max={100}
-              step={1}
-              disabled={fatisDisabled}
-            />
+            <div className="group relative">
+              <Slider
+                value={fat}
+                onValueChange={(newValue) => setFat(newValue)}
+                max={100}
+                step={1}
+                disabled={fatisDisabled}
+              />
+              <RecommendedRangeTooltip macro="fat" activeTags={activeRangeTags} />
+            </div>
           </div>
 
           {/* SATURATED FAT */}
@@ -193,13 +348,19 @@ function MacroMatcher() {
               </button>
               <p className="text-xs text-accent">{`${satFat}g`}</p>
             </div>
-            <Slider
-              value={satFat}
-              onValueChange={(newValue) => setSatFat(newValue)}
-              max={50}
-              step={1}
-              disabled={satFatisDisabled}
-            />
+            <div className="group relative">
+              <Slider
+                value={satFat}
+                onValueChange={(newValue) => setSatFat(newValue)}
+                max={50}
+                step={1}
+                disabled={satFatisDisabled}
+              />
+              <RecommendedRangeTooltip
+                macro="saturated_fat"
+                activeTags={activeRangeTags}
+              />
+            </div>
           </div>
 
           {/* SODIUM */}
@@ -213,13 +374,19 @@ function MacroMatcher() {
               </button>
               <p className="text-xs text-accent">{`${sodium}mg`}</p>
             </div>
-            <Slider
-              value={sodium}
-              onValueChange={(newValue) => setSodium(newValue)}
-              max={2500}
-              step={1}
-              disabled={sodiumisDisabled}
-            />
+            <div className="group relative">
+              <Slider
+                value={sodium}
+                onValueChange={(newValue) => setSodium(newValue)}
+                max={2500}
+                step={1}
+                disabled={sodiumisDisabled}
+              />
+              <RecommendedRangeTooltip
+                macro="sodium"
+                activeTags={activeRangeTags}
+              />
+            </div>
           </div>
 
           {/* SUGAR */}
@@ -233,13 +400,19 @@ function MacroMatcher() {
               </button>
               <p className="text-xs text-accent">{`${sugar}g`}</p>
             </div>
-            <Slider
-              value={sugar}
-              onValueChange={(newValue) => setSugar(newValue)}
-              max={100}
-              step={1}
-              disabled={sugarisDisabled}
-            />
+            <div className="group relative">
+              <Slider
+                value={sugar}
+                onValueChange={(newValue) => setSugar(newValue)}
+                max={100}
+                step={1}
+                disabled={sugarisDisabled}
+              />
+              <RecommendedRangeTooltip
+                macro="sugar"
+                activeTags={activeRangeTags}
+              />
+            </div>
 
             <motion.button
               type="submit"
@@ -248,7 +421,7 @@ function MacroMatcher() {
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
               onClick={async () => {
-                submitted.current = true;
+                setSubmitted(true);
 
                 // Send null for disabled values
                 const macros: Macros = {
@@ -287,7 +460,7 @@ function MacroMatcher() {
                 }
 
                 // find nearest cluster
-                let counts: Record<string, number> = {
+                const counts: Record<string, number> = {
                   "Light Sides & Soups": 0,
                   "Rich Meat Mains": 0,
                   "Desserts & Sweets": 0,
