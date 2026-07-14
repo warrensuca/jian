@@ -134,3 +134,26 @@
     @apply font-mono;
   }
 }
+
+@keyframes api-loading-wave {
+  0%,
+  100% {
+    height: 0.5rem;
+    opacity: 0.45;
+  }
+  50% {
+    height: 2.25rem;
+    opacity: 1;
+  }
+}
+
+.api-loading-bar {
+  animation: api-loading-wave 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .api-loading-bar {
+    animation: none;
+    height: 1.25rem;
+  }
+}

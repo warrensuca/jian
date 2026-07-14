@@ -1,8 +1,11 @@
 //import { Macros, RecipeRecommendation, Cluster, FullRecipe, RecipeCardType } from "@/types";
 import { Macros, RecipeRecommendation, Cluster, FullRecipe, RecipeCardType } from "../types"
 
-const BASE_URL = "https://chinese-recipe-api.vercel.app";
-
+const BASE_URL = "https://jian-api.onrender.com";
+export const dummy = async (): Promise<void> => {
+  const response = await fetch(BASE_URL, { cache: "no-store" });
+  if (!response.ok) throw new Error("Failed to wake the recipe API");
+};
 export const fetchWeightedReccomendedRecipes = async (macros: Macros) => {
   let recipe_recs: RecipeRecommendation[] = [];
   let query = "";

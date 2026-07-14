@@ -1,6 +1,6 @@
 import { RecipeImage } from "../types";
 
-const BASE_URL = "https://chinese-recipe-api.vercel.app";
+const BASE_URL = "https://jian-api.onrender.com/";
 
 export const fetchRecipeImage = async (
   recipeName: string,

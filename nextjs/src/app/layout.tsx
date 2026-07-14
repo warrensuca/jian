@@ -4,6 +4,7 @@ import "./globals.css";
 //import { cn } from "@/lib/utils";
 import { cn } from "../lib/utils"
 import Navbar from "../components/ui/NavBar";
+import ApiWakeupGate from "../components/ui/ApiWakeupGate";
 import { AuthProvider } from "./context/AuthContext";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -50,7 +51,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Navbar />
-        {children}
+        <ApiWakeupGate>{children}</ApiWakeupGate>
       </body>
     </html>
     //</AuthProvider>

@@ -4,16 +4,23 @@ import RecipeCard from "../../components/ui/RecipeCard";
 import { Slider } from "../../components/shadcn/slider";
 import { space_grotesk, roboto_mono } from "../../lib/fonts";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Macros, RecipeCardType, RecipeRecommendation } from "../../types";
 import {
+  dummy,
   fetchWeightedReccomendedRecipes,
   fetchFullRecipe,
 } from "../../api/recipeAPI";
 
 import { motion, AnimatePresence } from "motion/react";
 
-const RANGE_TAGS = ["bulking", "cutting", "healthy", "energy", "snack"] as const;
+const RANGE_TAGS = [
+  "bulking",
+  "cutting",
+  "healthy",
+  "energy",
+  "snack",
+] as const;
 
 type RangeTag = (typeof RANGE_TAGS)[number];
 type MacroRangeKey =
@@ -30,7 +37,7 @@ const RANGE_TAG_LABELS: Record<RangeTag, string> = {
   cutting: "Cutting",
   healthy: "Healthy",
   energy: "Energy",
-  snack: "Snack"
+  snack: "Snack",
 };
 
 const RECOMMENDED_RANGES: Record<
@@ -116,6 +123,11 @@ function RecommendedRangeTooltip({
 }
 
 function MacroMatcher() {
+  useEffect(() => {
+    dummy().catch((error) => {
+      console.error("Error waking the recipe API:", error);
+    });
+  }, []);
   const [calories, setCalories] = useState([200]);
   const [protein, setProtein] = useState([20]);
   const [carbs, setCarbs] = useState([40]);
@@ -333,7 +345,10 @@ function MacroMatcher() {
                 step={1}
                 disabled={fatisDisabled}
               />
-              <RecommendedRangeTooltip macro="fat" activeTags={activeRangeTags} />
+              <RecommendedRangeTooltip
+                macro="fat"
+                activeTags={activeRangeTags}
+              />
             </div>
           </div>
 
