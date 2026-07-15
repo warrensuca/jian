@@ -3,9 +3,14 @@
 import { space_grotesk, roboto_mono } from "../../lib/fonts";
 import { useEffect, useState, useMemo } from "react";
 import { FullRecipe } from "../../types";
-import { fetchAllRecipes, fullRecipeToCardType } from "../../api/recipeAPI";
+import {
+  fetchAllRecipes,
+  fullRecipeToCardType,
+  getCachedAllRecipes,
+} from "../../api/recipeAPI";
 import { motion } from "motion/react";
 import RecipeCard from "../../components/ui/RecipeCard";
+import ResultLoading from "../../components/ui/ResultLoading";
 
 const SEARCH_TAGS = [
   "chinese",
@@ -30,8 +35,12 @@ const getSearchTerms = (query: string) =>
     .filter(Boolean);
 
 function RecipeSearchPage() {
-  const [allRecipes, setAllRecipes] = useState<FullRecipe[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [allRecipes, setAllRecipes] = useState<FullRecipe[]>(
+    () => getCachedAllRecipes() ?? [],
+  );
+  const [loading, setLoading] = useState(
+    () => getCachedAllRecipes() === null,
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [displayLimit, setDisplayLimit] = useState(24);
 
@@ -57,17 +66,26 @@ function RecipeSearchPage() {
 
   // Fetch all recipes on load
   useEffect(() => {
+    if (getCachedAllRecipes()) return;
+
+    let isCurrent = true;
+
     async function loadAllRecipes() {
       try {
         const data = await fetchAllRecipes();
-        setAllRecipes(data);
+        if (isCurrent) setAllRecipes(data);
       } catch (error) {
         console.error("Error fetching all recipes:", error);
       } finally {
-        setLoading(false);
+        if (isCurrent) setLoading(false);
       }
     }
-    loadAllRecipes();
+
+    void loadAllRecipes();
+
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   // Filter recipes based on search query
@@ -169,7 +187,7 @@ function RecipeSearchPage() {
 
       <div className="px-[2rem] pb-12">
         {loading ? (
-          <p className="text-muted-foreground">Loading recipes...</p>
+          <ResultLoading label="Loading recipes..." />
         ) : (
           <>
             <div className="mb-6 border-t border-[#B8B8B8] pt-4">

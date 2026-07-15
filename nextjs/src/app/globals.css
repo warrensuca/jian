@@ -135,7 +135,7 @@
   }
 }
 
-@keyframes api-loading-wave {
+@keyframes result-loading-wave {
   0%,
   100% {
     height: 0.5rem;
@@ -147,12 +147,12 @@
   }
 }
 
-.api-loading-bar {
-  animation: api-loading-wave 1s ease-in-out infinite;
+.result-loading-bar {
+  animation: result-loading-wave 1s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .api-loading-bar {
+  .result-loading-bar {
     animation: none;
     height: 1.25rem;
   }

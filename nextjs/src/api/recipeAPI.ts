@@ -2,16 +2,16 @@
 import { Macros, RecipeRecommendation, Cluster, FullRecipe, RecipeCardType } from "../types"
 
 const BASE_URL = "https://jian-api.onrender.com";
-export const dummy = async (): Promise<void> => {
-  const response = await fetch(BASE_URL, { cache: "no-store" });
-  if (!response.ok) throw new Error("Failed to wake the recipe API");
-};
+let allRecipesCache: FullRecipe[] | null = null;
+let allRecipesRequest: Promise<FullRecipe[]> | null = null;
+
+export const getCachedAllRecipes = (): FullRecipe[] | null => allRecipesCache;
+
 export const fetchWeightedReccomendedRecipes = async (macros: Macros) => {
-  let recipe_recs: RecipeRecommendation[] = [];
+  const recipe_recs: RecipeRecommendation[] = [];
   let query = "";
   //calories=200&
   for (const [name, value] of Object.entries(macros)) {
-    const typedName = name as keyof typeof macros;
     console.log(name, value)
     if(value){
       query += `${name}=${value}&`;
@@ -23,13 +23,16 @@ export const fetchWeightedReccomendedRecipes = async (macros: Macros) => {
   const response = await fetch(`${BASE_URL}/recommend-by-weighted_nutrition?${query}`);
   if (!response.ok) throw new Error("Failed to fetch recipes");
 
-  const json: any = await response.json();
-  const data = json?.data;
+  const json: Array<{
+    Name: string;
+    Cluster: number;
+    Cluster_Name: string;
+    Distance: number;
+  }> = await response.json();
 
   console.log("recipe json :", json);
   console.log("recipe json first item:", json[0]);
-  console.log("recipe json first item name:", json[0].Name);
-  console.log("recipe json data: " + data);
+  console.log("recipe json first item name:", json[0]?.Name);
 
   for (let i = 0; i < json.length; i++) {
     const recipe: RecipeRecommendation = {
@@ -62,11 +65,23 @@ export const fetchClusterRecipes = async (clusterId: number): Promise<FullRecipe
   return await response.json();
 };
 
-export const fetchAllRecipes = async (): Promise<FullRecipe[]> => {
-  
-  const response = await fetch(`${BASE_URL}/recipes`);
-  if (!response.ok) throw new Error("Failed to fetch all recipes");
-  return await response.json();
+export const fetchAllRecipes = (): Promise<FullRecipe[]> => {
+  if (allRecipesCache) return Promise.resolve(allRecipesCache);
+  if (allRecipesRequest) return allRecipesRequest;
+
+  allRecipesRequest = fetch(`${BASE_URL}/recipes`)
+    .then(async (response) => {
+      if (!response.ok) throw new Error("Failed to fetch all recipes");
+
+      const recipes: FullRecipe[] = await response.json();
+      allRecipesCache = recipes;
+      return recipes;
+    })
+    .finally(() => {
+      allRecipesRequest = null;
+    });
+
+  return allRecipesRequest;
 };
 
 export const fullRecipeToCardType = (recipe: FullRecipe): RecipeCardType => {

@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { FullRecipe, RecipeImage } from "../../../types";
 import { fetchFullRecipe } from "../../../api/recipeAPI";
 import { fetchRecipeImage } from "../../../api/imageAPI";
+import ResultLoading from "../../../components/ui/ResultLoading";
 
 function RecipeDetailPage() {
   const params = useParams();
@@ -48,7 +49,7 @@ function RecipeDetailPage() {
     <div className="flex flex-col bg-background px-[20rem]">
       {loading ? (
         <div className="flex flex-col px-[2rem] py-[3.5rem]">
-          <p className="text-muted-foreground">Loading recipe...</p>
+          <ResultLoading label="Loading recipe..." />
         </div>
       ) : recipe ? (
           <>

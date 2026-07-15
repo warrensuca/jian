@@ -4,13 +4,13 @@ import RecipeCard from "../../components/ui/RecipeCard";
 import { Slider } from "../../components/shadcn/slider";
 import { space_grotesk, roboto_mono } from "../../lib/fonts";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Macros, RecipeCardType, RecipeRecommendation } from "../../types";
 import {
-  dummy,
   fetchWeightedReccomendedRecipes,
   fetchFullRecipe,
 } from "../../api/recipeAPI";
+import ResultLoading from "../../components/ui/ResultLoading";
 
 import { motion, AnimatePresence } from "motion/react";
 
@@ -123,11 +123,6 @@ function RecommendedRangeTooltip({
 }
 
 function MacroMatcher() {
-  useEffect(() => {
-    dummy().catch((error) => {
-      console.error("Error waking the recipe API:", error);
-    });
-  }, []);
   const [calories, setCalories] = useState([200]);
   const [protein, setProtein] = useState([20]);
   const [carbs, setCarbs] = useState([40]);
@@ -147,6 +142,8 @@ function MacroMatcher() {
   const [cluster, setCluster] = useState("Not Submitted");
   const [matchedRecipes, setMatchedRecipes] = useState<RecipeCardType[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [submitKey, setSubmitKey] = useState(0);
   const [activeRangeTags, setActiveRangeTags] = useState<RangeTag[]>([]);
 
@@ -431,72 +428,78 @@ function MacroMatcher() {
 
             <motion.button
               type="submit"
-              className="bg-transparent border border-solid border-muted-foreground hover:bg-[#4A7865] mt-4"
+              disabled={isLoading}
+              className="bg-transparent border border-solid border-muted-foreground hover:bg-[#4A7865] mt-4 disabled:cursor-wait disabled:opacity-60"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
               onClick={async () => {
-                setSubmitted(true);
+                setIsLoading(true);
+                setLoadError(null);
+                setSubmitted(false);
 
-                // Send null for disabled values
-                const macros: Macros = {
-                  calories: caloriesisDisabled ? null : calories[0],
-                  protein: proteinisDisabled ? null : protein[0],
-                  carbohydrates: carbsisDisabled ? null : carbs[0],
-                  fat: fatisDisabled ? null : fat[0],
-                  saturated_fat: satFatisDisabled ? null : satFat[0],
-                  sodium: sodiumisDisabled ? null : sodium[0] / 1000,
-                  sugar: sugarisDisabled ? null : sugar[0],
-                };
+                try {
+                  // Send null for disabled values
+                  const macros: Macros = {
+                    calories: caloriesisDisabled ? null : calories[0],
+                    protein: proteinisDisabled ? null : protein[0],
+                    carbohydrates: carbsisDisabled ? null : carbs[0],
+                    fat: fatisDisabled ? null : fat[0],
+                    saturated_fat: satFatisDisabled ? null : satFat[0],
+                    sodium: sodiumisDisabled ? null : sodium[0] / 1000,
+                    sugar: sugarisDisabled ? null : sugar[0],
+                  };
 
-                const recipes: RecipeRecommendation[] =
-                  await fetchWeightedReccomendedRecipes(macros);
-                const fetchedRecipes: RecipeCardType[] = [];
-                await new Promise((resolve) => setTimeout(resolve, 600));
-                for (const r of recipes.slice(0, 3)) {
-                  {
-                    await new Promise((resolve) => setTimeout(resolve, 600));
+                  const recipes: RecipeRecommendation[] =
+                    await fetchWeightedReccomendedRecipes(macros);
+                  const fetchedRecipes: RecipeCardType[] = [];
+                  for (const r of recipes.slice(0, 3)) {
+                    try {
+                      const recipeData = await fetchFullRecipe(r.name);
+
+                      fetchedRecipes.push({
+                        name: recipeData.Name,
+                        macros: [
+                          { Cal: Number(recipeData.Calories) },
+                          { Pro: Number(recipeData.Protein) },
+                          { Carbs: Number(recipeData.Carbohydrates) },
+                        ] as Record<string, number>[],
+                        clusterName: recipeData.Cluster_Name,
+                      });
+                    } catch (error) {
+                      console.error("Error fetching individual recipe:", error);
+                    }
                   }
-                  try {
-                    const recipeData = await fetchFullRecipe(r.name);
 
-                    fetchedRecipes.push({
-                      name: recipeData.Name,
-                      macros: [
-                        { Cal: Number(recipeData.Calories) },
-                        { Pro: Number(recipeData.Protein) },
-                        { Carbs: Number(recipeData.Carbohydrates) },
-                      ] as Record<string, number>[],
-                      clusterName: recipeData.Cluster_Name,
-                    });
-                  } catch (error) {
-                    console.error("Error fetching individual recipe:", error);
+                  // find nearest cluster
+                  const counts: Record<string, number> = {
+                    "Light Sides & Soups": 0,
+                    "Rich Meat Mains": 0,
+                    "Desserts & Sweets": 0,
+                    "Balanced Carb-Mains": 0,
+                    "Low-Carb Proteins": 0,
+                  };
+                  for (const r of recipes) {
+                    counts[r.clusterName] = (counts[r.clusterName] || 0) + 1;
                   }
-                }
 
-                // find nearest cluster
-                const counts: Record<string, number> = {
-                  "Light Sides & Soups": 0,
-                  "Rich Meat Mains": 0,
-                  "Desserts & Sweets": 0,
-                  "Balanced Carb-Mains": 0,
-                  "Low-Carb Proteins": 0,
-                };
-                for (const r of recipes) {
-                  counts[r.clusterName] = (counts[r.clusterName] || 0) + 1;
+                  setCluster(
+                    Object.keys(counts).reduce((a, b) =>
+                      counts[a] > counts[b] ? a : b,
+                    ),
+                  );
+                  setMatchedRecipes(fetchedRecipes);
+                  setSubmitted(true);
+                  setSubmitKey((prev) => prev + 1);
+                } catch (error) {
+                  console.error("Error matching recipes:", error);
+                  setLoadError("We couldn't match those macros. Please try again.");
+                } finally {
+                  setIsLoading(false);
                 }
-
-                setCluster(
-                  Object.keys(counts).reduce((a, b) =>
-                    counts[a] > counts[b] ? a : b,
-                  ),
-                );
-                // update state once with all the new recipes added to the existing ones
-                setMatchedRecipes(fetchedRecipes);
-                setSubmitKey((prev) => prev + 1);
               }}
             >
-              Submit
+              {isLoading ? "Matching..." : "Submit"}
             </motion.button>
           </div>
         </div>
@@ -509,7 +512,7 @@ function MacroMatcher() {
 
           <AnimatePresence mode="wait">
             <motion.div
-              key={submitKey}
+              key={isLoading ? "loading" : loadError ? "error" : submitKey}
               variants={blurVariants}
               initial="hidden"
               animate="visible"
@@ -517,34 +520,49 @@ function MacroMatcher() {
               transition={{ duration: 0.4, ease: "easeInOut" }}
               className="flex flex-col gap-[1rem]"
             >
-              <div className="flex flex-col gap-[1rem] p-[1.5rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
-                <p
-                  className={`text-sm ${roboto_mono.className} text-[#4A7865]`}
-                >
-                  MATCHED TO CLUSTER
-                </p>
-
-                <p
-                  className={`text-3xl ${space_grotesk.className} font-bold ${cluster === "Not Submitted" ? "text-muted-foreground" : "text-foreground"}`}
-                >
-                  {cluster}
-                </p>
-
-                <p className="text-sm text-muted-foreground text-wrap">
-                  {nameToDescription[cluster]}
-                </p>
-              </div>
-
-              {cluster !== "Not Submitted" && (
-                <div className="flex flex-col gap-[1rem] px-[1rem] py-[0.75rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
-                  <Link href={`/cluster-explorer/${nameToNum[cluster]}`}>
-                    <p
-                      className={`text-sm text-muted-foreground ${space_grotesk.className} font-medium`}
-                    >
-                      {`Browse all in ${cluster}`}
-                    </p>
-                  </Link>
+              {isLoading ? (
+                <ResultLoading label="Matching your macros..." />
+              ) : loadError ? (
+                <div className="flex min-h-40 flex-col justify-center border border-[#B8B8B8] bg-white p-6">
+                  <p className={`text-sm ${roboto_mono.className} text-[#4A7865]`}>
+                    MATCH FAILED
+                  </p>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {loadError}
+                  </p>
                 </div>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-[1rem] p-[1.5rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
+                    <p
+                      className={`text-sm ${roboto_mono.className} text-[#4A7865]`}
+                    >
+                      MATCHED TO CLUSTER
+                    </p>
+
+                    <p
+                      className={`text-3xl ${space_grotesk.className} font-bold ${cluster === "Not Submitted" ? "text-muted-foreground" : "text-foreground"}`}
+                    >
+                      {cluster}
+                    </p>
+
+                    <p className="text-sm text-muted-foreground text-wrap">
+                      {nameToDescription[cluster]}
+                    </p>
+                  </div>
+
+                  {cluster !== "Not Submitted" && (
+                    <div className="flex flex-col gap-[1rem] px-[1rem] py-[0.75rem] border-solid border-[#B8B8B8] rounded-[0.25rem] border-1">
+                      <Link href={`/cluster-explorer/${nameToNum[cluster]}`}>
+                        <p
+                          className={`text-sm text-muted-foreground ${space_grotesk.className} font-medium`}
+                        >
+                          {`Browse all in ${cluster}`}
+                        </p>
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </motion.div>
           </AnimatePresence>

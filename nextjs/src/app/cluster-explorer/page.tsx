@@ -9,6 +9,7 @@ import { Cluster } from '../../types'
 //import { fetchClusters } from "@/api/recipeAPI";
 import { fetchClusters } from "../../api/recipeAPI"
 import { motion } from "motion/react";
+import ResultLoading from "../../components/ui/ResultLoading";
 function ClusterCard({ cluster, index }: { cluster: Cluster; index: number }) {
   return (
     <Link href={`/cluster-explorer/${cluster.Cluster}`}>
@@ -102,7 +103,7 @@ function ClusterExplorer() {
       <div className="flex flex-col gap-6 pb-12">
         {loading ? (
           <div className="px-[2rem]">
-            <p className="text-muted-foreground">Loading clusters...</p>
+            <ResultLoading label="Loading clusters..." />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-[2rem]">

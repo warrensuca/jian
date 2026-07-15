@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { FullRecipe } from "../../../types"
 import { fetchClusterRecipes, fullRecipeToCardType } from "../../../api/recipeAPI" //"@/api/recipeAPI";
 import RecipeCard from "../../../components/ui/RecipeCard" //"@/components/ui/RecipeCard";
+import ResultLoading from "../../../components/ui/ResultLoading";
 
 function ClusterDetailPage() {
   const params = useParams();
@@ -54,7 +55,7 @@ function ClusterDetailPage() {
 
       <div className="px-[2rem] pb-12">
         {loading ? (
-          <p className="text-muted-foreground">Loading recipes...</p>
+          <ResultLoading label="Loading cluster recipes..." />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {recipes.map((recipe, index) => (
