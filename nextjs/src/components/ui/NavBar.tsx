@@ -3,29 +3,29 @@ import Link from "next/link";
 import Image from 'next/image';
 function Navbar() {
   return (
-    <nav className="flex justify-between items-center  w-full px-[15rem] h-14.25  bg-background border border-l-0 border-r-0  border-t-0 border-solid">
-      <Link href="/">
+    <nav className="sticky top-0 z-50 flex h-[3.5625rem] w-full items-center justify-between border-b border-[#c9c1b5]/80 bg-[#f4f1eb]/88 px-5 backdrop-blur-xl sm:px-8 lg:px-[max(2rem,calc((100vw-1180px)/2))]">
+      <Link href="/" aria-label="Jian home">
       
           <Image 
             src="/icon2.svg" 
             alt="home" 
             width={100} 
             height={100} 
-            className="drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] hover:opacity-80"
+            className="h-auto w-[4.75rem] transition-opacity hover:opacity-65"
           />
       </Link>
 
-      <div className="flex justify-between w-93 h-5.5 text-muted-foreground whitespace-nowrap gap-8">
+      <div className="flex items-center gap-3 whitespace-nowrap text-muted-foreground sm:gap-7">
         <Link href="/macro-matcher">
-          <p className="text-sm hover:text-foreground transition-colors">Macro Matcher</p>
+          <p className="text-[0.68rem] transition-colors hover:text-foreground sm:text-xs">Macro <span className="hidden sm:inline">Matcher</span></p>
         </Link>
 
         <Link href="/recipe-search">
-          <p className="text-sm hover:text-foreground transition-colors">Recipe Search</p>
+          <p className="text-[0.68rem] transition-colors hover:text-foreground sm:text-xs">Search</p>
         </Link>
 
         <Link href="/cluster-explorer">
-          <p className="text-sm hover:text-foreground transition-colors">Cluster Explorer</p>
+          <p className="text-[0.68rem] transition-colors hover:text-foreground sm:text-xs">Clusters</p>
         </Link>
       </div>
     </nav>

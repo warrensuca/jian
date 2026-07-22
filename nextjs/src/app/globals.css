@@ -129,10 +129,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    min-width: 320px;
   }
   html {
     @apply font-mono;
+    scroll-behavior: smooth;
   }
+}
+
+::selection {
+  color: #fffaf0;
+  background: #4a7865;
 }
 
 @keyframes result-loading-wave {
@@ -152,6 +159,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   .result-loading-bar {
     animation: none;
     height: 1.25rem;

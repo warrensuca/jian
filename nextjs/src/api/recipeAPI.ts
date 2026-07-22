@@ -5,6 +5,28 @@ const BASE_URL = "https://jian-api.onrender.com";
 let allRecipesCache: FullRecipe[] | null = null;
 let allRecipesRequest: Promise<FullRecipe[]> | null = null;
 
+const RATE_LIMIT_RETRY_MS = 650;
+
+const wait = (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const fetchWithRateLimitRetry = async (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> => {
+  let response = await fetch(input, init);
+
+  // The API currently applies a 500ms, per-IP cooldown to every endpoint.
+  // A single retry keeps normal navigation resilient when a previous request
+  // (for example an image lookup) happened just before this one.
+  if (response.status === 429) {
+    await wait(RATE_LIMIT_RETRY_MS);
+    response = await fetch(input, init);
+  }
+
+  return response;
+};
+
 export const getCachedAllRecipes = (): FullRecipe[] | null => allRecipesCache;
 
 export const fetchWeightedReccomendedRecipes = async (macros: Macros) => {
@@ -48,9 +70,33 @@ export const fetchWeightedReccomendedRecipes = async (macros: Macros) => {
 
 
 export const fetchFullRecipe = async (recipeName: string): Promise<FullRecipe> => {
-  const response = await fetch(`${BASE_URL}/recipes/${recipeName}`);
-  if (!response.ok) throw new Error("Failed to fetch recipe");
-  return await response.json();
+  const normalizedName = recipeName.trim().normalize("NFKC");
+  const response = await fetchWithRateLimitRetry(
+    `${BASE_URL}/recipes/${encodeURIComponent(normalizedName)}`,
+  );
+
+  if (response.ok) return await response.json();
+
+  // Recipe names are not stable path identifiers: some contain characters
+  // (notably slashes) that can be decoded by a proxy before FastAPI matches
+  // the route. The collection endpoint is a reliable fallback for those names.
+  if (response.status === 404) {
+    const recipes = await fetchAllRecipes();
+    const comparableName = normalizedName.toLocaleLowerCase();
+    const match = recipes.find(
+      (recipe) =>
+        recipe.Name.trim().normalize("NFKC").toLocaleLowerCase() ===
+        comparableName,
+    );
+
+    if (match) return match;
+  }
+
+  throw new Error(
+    response.status === 404
+      ? "Recipe not found"
+      : `Recipe service returned ${response.status}`,
+  );
 };
 
 export const fetchClusters = async (): Promise<Cluster[]> => {
@@ -69,7 +115,7 @@ export const fetchAllRecipes = (): Promise<FullRecipe[]> => {
   if (allRecipesCache) return Promise.resolve(allRecipesCache);
   if (allRecipesRequest) return allRecipesRequest;
 
-  allRecipesRequest = fetch(`${BASE_URL}/recipes`)
+  allRecipesRequest = fetchWithRateLimitRetry(`${BASE_URL}/recipes`)
     .then(async (response) => {
       if (!response.ok) throw new Error("Failed to fetch all recipes");
 

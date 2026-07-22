@@ -5,12 +5,16 @@ import { motion } from "motion/react";
 function RecipeCard(props: RecipeCardType) {
   return (
     <motion.div
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 400, damping: 15 }}
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 360, damping: 24 }}
+      className="h-full"
     >
-      <Link href={`/recipe/${encodeURIComponent(props.name)}`}>
-        <div className="flex flex-col w-[18rem] gap-[0.5rem] p-[1.25rem] bg-[#ffffff] rounded-[0.25rem] border border-1px border-[#B8B8B8] hover:bg-[#F8F6F3] transition-colors cursor-pointer">
+      <Link
+        href={{ pathname: "/recipe", query: { name: props.name } }}
+        className="block h-full"
+      >
+        <div className="flex h-full w-full flex-col gap-[0.5rem] rounded-[0.5rem] border border-[#B8B8B8] bg-white p-[1.25rem] shadow-[0_8px_30px_rgba(57,48,37,0.03)] transition-[background-color,border-color,box-shadow] duration-300 hover:border-[#7f9a8e] hover:bg-[#F8F6F3] hover:shadow-[0_16px_36px_rgba(57,48,37,0.08)]">
           <h3 className="text-foreground font-medium">{props.name}</h3>
 
           <div className="flex flex-wrap py-[0.5rem] gap-[0.375rem]">
