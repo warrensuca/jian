@@ -20,6 +20,25 @@ class RecipeRatingCreate(RecipeRatingBase):
     pass
 
 
+@router.get("/by-name/{recipe_name}")
+def get_recipe_rating_by_name(
+    db: db_dependency, user: user_dependency, recipe_name: str
+):
+    db_recipe_rating = (
+        db.query(Recipe_Ratings)
+        .filter(
+            Recipe_Ratings.recipe_name == recipe_name,
+            Recipe_Ratings.user_id == user.get("id"),
+        )
+        .first()
+    )
+
+    if db_recipe_rating is None:
+        raise HTTPException(status_code=404, detail="Recipe rating not found")
+
+    return db_recipe_rating
+
+
 @router.get("/{recipe_rating_id}")
 def get_recipe_rating(
     db: db_dependency, user: user_dependency, recipe_rating_id: int
@@ -49,14 +68,26 @@ def get_recipe_ratings(db: db_dependency, user: user_dependency):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_recipe_rating(
+def create_or_update_recipe_rating(
     db: db_dependency, user: user_dependency, recipe_rating: RecipeRatingCreate
 ):
-    db_recipe_rating = Recipe_Ratings(
-        **recipe_rating.model_dump(), user_id=user.get("id")
+    db_recipe_rating = (
+        db.query(Recipe_Ratings)
+        .filter(
+            Recipe_Ratings.recipe_name == recipe_rating.recipe_name,
+            Recipe_Ratings.user_id == user.get("id"),
+        )
+        .first()
     )
 
-    db.add(db_recipe_rating)
+    if db_recipe_rating:
+        db_recipe_rating.rating = recipe_rating.rating
+    else:
+        db_recipe_rating = Recipe_Ratings(
+            **recipe_rating.model_dump(), user_id=user.get("id")
+        )
+        db.add(db_recipe_rating)
+
     db.commit()
     db.refresh(db_recipe_rating)
 

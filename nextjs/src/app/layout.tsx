@@ -4,6 +4,7 @@ import "./globals.css";
 //import { cn } from "@/lib/utils";
 import { cn } from "../lib/utils"
 import Navbar from "../components/ui/NavBar";
+import Providers from "./Providers";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -38,7 +39,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    //<AuthProvider>
     <html
       lang="en"
       suppressHydrationWarning
@@ -52,10 +52,11 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar />
-        {children}
+        <Providers>
+          <Navbar />
+          {children}
+        </Providers>
       </body>
     </html>
-    //</AuthProvider>
   );
 }

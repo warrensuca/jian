@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import (
     auth,
     favorited_recipes,
-    recommendation_history,
+    recipe_interactions,
     recipe_ratings,
 )
 
@@ -34,4 +34,4 @@ def health_check():
 app.include_router(auth.router)
 app.include_router(favorited_recipes.router)
 app.include_router(recipe_ratings.router)
-app.include_router(recommendation_history.router)
+app.include_router(recipe_interactions.router)
