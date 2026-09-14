@@ -9,6 +9,7 @@ import {
   MagnifyingGlass,
   SlidersHorizontal,
   Sparkle,
+  ArrowsLeftRight,
 } from "@phosphor-icons/react";
 import { animate, createScope, stagger } from "animejs";
 import Link from "next/link";
@@ -52,6 +53,15 @@ const features = [
     cta: "Explore the families",
     icon: CirclesThreePlus,
   },
+  {
+    number: "04",
+    title: "Create Healthier",
+    description:
+      "Swap ingredients for higher protein, lower calorie, or lower carb alternatives using sentence embeddings and balanced health scores.",
+    href: "/recipe-search",
+    cta: "Remix a recipe",
+    icon: ArrowsLeftRight,
+  },
 ];
 
 const methodology = [
@@ -78,6 +88,12 @@ const methodology = [
     title: "Match",
     body: "Your selected macros become a point in that same feature space; weighted distance brings the closest recipes to the surface.",
     icon: SlidersHorizontal,
+  },
+  {
+    number: "05",
+    title: "Remix",
+    body: "A Health-Similarity Score combines semantic ingredient vectors with nutritional goals to suggest realistic, healthy culinary substitutions.",
+    icon: ArrowsLeftRight,
   },
 ];
 
@@ -238,7 +254,7 @@ export default function Home() {
 
       <section id="features" className={styles.featureSection}>
         <div data-scroll-reveal className={styles.sectionHeading}>
-          <p className={`${styles.eyebrow} ${roboto_mono.className}`}>THREE WAYS IN</p>
+          <p className={`${styles.eyebrow} ${roboto_mono.className}`}>FOUR WAYS IN</p>
           <h2 className={`${space_grotesk.className} ${styles.sectionTitle}`}>
             Start with a number.<br />Start with a craving.
           </h2>
