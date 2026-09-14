@@ -41,6 +41,7 @@ export interface FullRecipe {
   Sugar: string | number;
   Nutrition_Facts: string;
   Ingredients_List: string;
+  Ingredients_Names?: string;
   Procedure: string;
   Servings: string | number;
   Prep_Time: string | number;
@@ -94,3 +95,33 @@ export interface DashboardStats {
   total_ratings: number;
   recent_recipes: { recipe_name: string; interaction_type: string; created_at: string }[];
 }
+
+export type HealthGoal = 'higher_protein' | 'lower_calorie' | 'lower_carb';
+
+export interface HealthierRecommendation {
+  Ingredient: string;
+  Similarity: number;
+  Health_Score: number;
+  Balanced_Score: number;
+  Target_Nutritional_Value: number;
+  Alternative_Nutritional_Value: number;
+  Health_Improvement: number;
+  Unit: string;
+}
+
+export interface HealthierResponse {
+  Target_Ingredient: string;
+  Goal: HealthGoal;
+  Similarity_Weight: number;
+  Recommendations: HealthierRecommendation[];
+}
+
+export interface SubstitutedIngredient {
+  originalText: string;
+  substitutedText: string;
+  substituteName: string;
+  goal: HealthGoal;
+  improvement: number;
+  unit: string;
+}
+
