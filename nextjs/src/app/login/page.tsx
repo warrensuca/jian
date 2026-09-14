@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
 
 export default function LoginPage() {
-  const { login, register, user } = useAuth();
+  const { login, register, user, isLoading } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -15,8 +15,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If already logged in, show a redirect link
-  if (user) {
+  // If already logged in, show an easy return link
+  if (!isLoading && user) {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center px-5 py-14">
         <p className={`${roboto_mono.className} mb-3 text-xs text-[#4A7865]`}>
@@ -41,21 +41,24 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+    console.log(`[LOGIN PAGE] Submitting form in '${mode}' mode with username:`, username);
 
     try {
       if (mode === "register") {
-        await register(username, email, password);
+        await register(username.trim(), email.trim(), password);
       } else {
-        await login(username, password);
+        await login(username.trim(), password);
       }
+      console.log(`[LOGIN PAGE] ${mode} action completed successfully.`);
     } catch (err) {
-      setError(
+      console.error(`[LOGIN PAGE] Error during ${mode}:`, err);
+      const errorMessage =
         err instanceof Error
           ? err.message
           : mode === "register"
-            ? "Registration failed"
-            : "Invalid credentials",
-      );
+            ? "Registration failed. Please check your details."
+            : "Sign in failed. Please check your credentials.";
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -81,16 +84,17 @@ export default function LoginPage() {
               htmlFor="username"
               className="mb-1.5 block text-xs uppercase tracking-wider text-muted-foreground"
             >
-              Username
+              {mode === "login" ? "Username or Email" : "Username"}
             </label>
             <input
               id="username"
               type="text"
               required
+              autoComplete={mode === "login" ? "username" : "new-username"}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full rounded-lg border border-[#c9c1b5] bg-[#F4F1EB] px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[#4A7865] focus:ring-1 focus:ring-[#4A7865]/30"
-              placeholder="your username"
+              placeholder={mode === "login" ? "username or email" : "your username"}
             />
           </div>
 
@@ -106,6 +110,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border border-[#c9c1b5] bg-[#F4F1EB] px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[#4A7865] focus:ring-1 focus:ring-[#4A7865]/30"
@@ -125,6 +130,7 @@ export default function LoginPage() {
               id="password"
               type="password"
               required
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-[#c9c1b5] bg-[#F4F1EB] px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[#4A7865] focus:ring-1 focus:ring-[#4A7865]/30"
@@ -133,9 +139,9 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
+            <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs leading-relaxed text-red-700">
               {error}
-            </p>
+            </div>
           )}
 
           <button

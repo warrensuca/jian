@@ -1,6 +1,6 @@
 import { RecipeImage } from "../types";
 
-const BASE_URL = "https://jian-api.onrender.com/";
+const BASE_URL = "https://jian-api.onrender.com";
 
 export const fetchRecipeImage = async (
   recipeName: string,

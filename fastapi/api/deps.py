@@ -1,16 +1,26 @@
 from typing import Annotated
-from sqlalchemy.orm import Session
+import os
+from dotenv import load_dotenv, find_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
 from jose import jwt, JWTError
-from dotenv import load_dotenv
-import os
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 from .database import SessionLocal
 
-load_dotenv()
-SECRET_KEY = os.getenv('AUTH_SECRET_KEY')
-ALGORITHM = os.getenv('AUTH_AlGORITHM')
+# Find and load .env regardless of working directory
+dotenv_path = find_dotenv()
+if dotenv_path:
+    load_dotenv(dotenv_path)
+    print(f"[AUTH DEPS] Loaded .env from: {dotenv_path}")
+else:
+    load_dotenv()
+    print("[AUTH DEPS] Warning: find_dotenv() did not find a .env file, checked default environment.")
+
+SECRET_KEY = os.getenv('AUTH_SECRET_KEY') or "jian_fallback_auth_secret_key_2026_dev_mode"
+ALGORITHM = os.getenv('AUTH_AlGORITHM') or os.getenv('AUTH_ALGORITHM') or "HS256"
+
+print(f"[AUTH DEPS] Auth initialized with SECRET_KEY (length={len(SECRET_KEY)}), ALGORITHM='{ALGORITHM}'")
 
 def get_db():
     db = SessionLocal()
@@ -18,7 +28,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
@@ -32,11 +41,14 @@ async def get_current_user(token: oath2_bearer_dependency):
         username: str = payload.get('sub')
         user_id: int = payload.get('id')
         if username is None or user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail = 'Could not validate user')
+            print(f"[AUTH DEPS] Token decoded but payload missing sub or id: {payload}")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user credentials')
+        
+        print(f"[AUTH DEPS] Successfully validated token for user='{username}' (id={user_id})")
         return {'username': username, 'id': user_id}
 
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail = 'Could not validate user')
-    
+    except JWTError as e:
+        print(f"[AUTH DEPS] JWT decoding error: {e}")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user credentials')
 
 user_dependency = Annotated[dict, Depends(get_current_user)]

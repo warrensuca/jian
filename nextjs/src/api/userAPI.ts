@@ -1,4 +1,7 @@
-const AUTH_BASE_URL = "http://localhost:8000";
+const AUTH_BASE_URL =
+  process.env.NEXT_PUBLIC_AUTH_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:8000";
 
 const authHeaders = (token: string) => ({
   'Authorization': `Bearer ${token}`,

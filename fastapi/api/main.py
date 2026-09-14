@@ -10,26 +10,26 @@ from .routers import (
 
 from .database import Base, engine
 
-app = FastAPI()
+app = FastAPI(title="Jian Backend API")
 
 Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:3001',
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
     ],
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/")
 def health_check():
-    return 'Health check complete'
+    return {"message": "Jian Backend API is running"}
 
 app.include_router(auth.router)
 app.include_router(favorited_recipes.router)

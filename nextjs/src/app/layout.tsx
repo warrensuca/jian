@@ -23,13 +23,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Jian — Chinese recipes, arranged by signal",
+    default: "Jian",
     template: "%s | Jian",
   },
   description:
     "A data-driven Chinese cookbook that matches recipes to your nutrition, ingredients, and appetite.",
   icons: {
-    icon: "/icon.svg",
+    icon: "/icon2.svg",
   },
 };
 
