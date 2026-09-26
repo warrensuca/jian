@@ -32,7 +32,7 @@ const features = [
     description:
       "Shape the meal around the numbers that matter to you. Weighted distance finds recipes nearest to your nutrition profile.",
     href: "/macro-matcher",
-    cta: "Tune your plate",
+    cta: "Tune",
     icon: SlidersHorizontal,
   },
   {
@@ -41,7 +41,7 @@ const features = [
     description:
       "Move through the collection by dish, ingredient, or nutritional family—without needing to know exactly what you want yet.",
     href: "/recipe-search",
-    cta: "Search the collection",
+    cta: "Search",
     icon: MagnifyingGlass,
   },
   {
@@ -50,7 +50,7 @@ const features = [
     description:
       "Browse the naturally occurring families in the data, from lighter sides to rich mains, sweets, and balanced staples.",
     href: "/cluster-explorer",
-    cta: "Explore the families",
+    cta: "Explore",
     icon: CirclesThreePlus,
   },
   {
@@ -59,7 +59,7 @@ const features = [
     description:
       "Swap ingredients for higher protein, lower calorie, or lower carb alternatives using sentence embeddings and balanced health scores.",
     href: "/recipe-search",
-    cta: "Remix a recipe",
+    cta: "Remix",
     icon: ArrowsLeftRight,
   },
 ];
@@ -211,12 +211,12 @@ export default function Home() {
               A DATA-DRIVEN CHINESE COOKBOOK
             </p>
             <h1 data-hero-reveal className={`${styles.heroTitle} ${space_grotesk.className}`}>
-              Cook by feeling.
+              Cook with intuition. 
               <br />
-              <span>Choose by signal.</span>
+              <span>Choose by nutrition.</span>
             </h1>
             <p data-hero-reveal className={styles.heroBody}>
-              Jian turns a living archive of Chinese recipes into a softer way to decide what’s for dinner—guided by nutrition, ingredients, and the shape of your day.
+              Jian uses data to turn a living archive of Chinese recipes into the perfect meal for your daily macro goals.
             </p>
             <div data-hero-reveal className={styles.heroActions}>
               <Link href="/macro-matcher" className={styles.primaryButton}>
@@ -334,9 +334,7 @@ export default function Home() {
         <blockquote data-scroll-reveal className={space_grotesk.className}>
           “Good food is instinct.<br />Good tools make room for it.”
         </blockquote>
-        <p data-scroll-reveal>
-          Built for the moment between opening the fridge and knowing what comes next.
-        </p>
+         
       </section>
 
       <section className={styles.finalCta}>

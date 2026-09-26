@@ -2,7 +2,7 @@ const AUTH_BASE_URL =
   process.env.NEXT_PUBLIC_AUTH_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:8000";
-
+  
 console.log("[AUTH API] Initialized with AUTH_BASE_URL:", AUTH_BASE_URL);
 
 export const registerUser = async (username: string, email: string, password: string) => {
@@ -19,7 +19,7 @@ export const registerUser = async (username: string, email: string, password: st
   } catch (networkError) {
     console.error("[AUTH API] Network error connecting to backend:", networkError);
     throw new Error(
-      `Could not connect to FastAPI server at ${AUTH_BASE_URL}. Please ensure your backend is running on port 8000.`
+      `Could not connect to FastAPI server, error 1`
     );
   }
 
@@ -55,7 +55,7 @@ export const loginUser = async (usernameOrEmail: string, password: string) => {
   } catch (networkError) {
     console.error("[AUTH API] Network error connecting to backend:", networkError);
     throw new Error(
-      `Could not connect to FastAPI server at ${AUTH_BASE_URL}. Please ensure your backend is running on port 8000.`
+      `Could not connect to FastAPI server, error 2. Please ensure your backend is running on port 8000.`
     );
   }
 
@@ -87,7 +87,7 @@ export const getMe = async (token: string) => {
   } catch (networkError) {
     console.error("[AUTH API] Network error verifying token at:", url, networkError);
     throw new Error(
-      `Could not connect to FastAPI server at ${AUTH_BASE_URL} to verify token.`
+      `Could not connect to FastAPI server, error 3 to verify token.`
     );
   }
 
