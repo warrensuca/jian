@@ -1,7 +1,9 @@
-const AUTH_BASE_URL =
+const RAW_AUTH_URL =
   process.env.NEXT_PUBLIC_AUTH_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8000";
+  "https://jian-auth-api.vercel.app";
+
+const AUTH_BASE_URL = RAW_AUTH_URL.replace(/\/+$/, "");
 
 const authHeaders = (token: string) => ({
   'Authorization': `Bearer ${token}`,

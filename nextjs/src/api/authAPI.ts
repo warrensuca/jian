@@ -1,13 +1,12 @@
-const AUTH_BASE_URL =
+const RAW_AUTH_URL =
   process.env.NEXT_PUBLIC_AUTH_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8000";
-  
-console.log("[AUTH API] Initialized with AUTH_BASE_URL:", AUTH_BASE_URL);
+  "https://jian-auth-api.vercel.app";
+
+const AUTH_BASE_URL = RAW_AUTH_URL.replace(/\/+$/, "");
 
 export const registerUser = async (username: string, email: string, password: string) => {
   const url = `${AUTH_BASE_URL}/auth/`;
-  console.log(`[AUTH API] POST ${url} - Registering username: '${username}', email: '${email}'`);
 
   let response: Response;
   try {
@@ -17,9 +16,9 @@ export const registerUser = async (username: string, email: string, password: st
       body: JSON.stringify({ username, email, password }),
     });
   } catch (networkError) {
-    console.error("[AUTH API] Network error connecting to backend:", networkError);
+    console.error("[AUTH API] Network error during registration:", networkError);
     throw new Error(
-      `Could not connect to FastAPI server, error 1`
+      "Unable to connect to the authentication service. Please check your internet connection and try again."
     );
   }
 
@@ -28,18 +27,16 @@ export const registerUser = async (username: string, email: string, password: st
     console.error(`[AUTH API] Registration failed with status ${response.status}:`, errorData);
     const message =
       errorData?.detail ||
-      `Registration failed (Server returned HTTP ${response.status})`;
+      "Registration failed. Please check your details and try again.";
     throw new Error(typeof message === "string" ? message : JSON.stringify(message));
   }
 
   const data = await response.json();
-  console.log("[AUTH API] Registration successful! Received user:", data);
   return data;
 };
 
 export const loginUser = async (usernameOrEmail: string, password: string) => {
   const url = `${AUTH_BASE_URL}/auth/token`;
-  console.log(`[AUTH API] POST ${url} - Attempting login for identifier: '${usernameOrEmail}'`);
 
   const formData = new URLSearchParams();
   formData.append("username", usernameOrEmail);
@@ -53,9 +50,9 @@ export const loginUser = async (usernameOrEmail: string, password: string) => {
       body: formData,
     });
   } catch (networkError) {
-    console.error("[AUTH API] Network error connecting to backend:", networkError);
+    console.error("[AUTH API] Network error during login:", networkError);
     throw new Error(
-      `Could not connect to FastAPI server, error 2. Please ensure your backend is running on port 8000.`
+      "Unable to connect to the authentication service. Please check your internet connection and try again."
     );
   }
 
@@ -65,19 +62,17 @@ export const loginUser = async (usernameOrEmail: string, password: string) => {
     const message =
       errorData?.detail ||
       (response.status === 401
-        ? "Incorrect username/email or password"
-        : `Login failed (HTTP ${response.status})`);
+        ? "Incorrect username/email or password."
+        : "Sign in failed. Please check your credentials.");
     throw new Error(typeof message === "string" ? message : JSON.stringify(message));
   }
 
   const data = await response.json();
-  console.log("[AUTH API] Login successful! Received access token of length:", data.access_token?.length);
   return data; // { access_token, token_type }
 };
 
 export const getMe = async (token: string) => {
   const url = `${AUTH_BASE_URL}/auth/me`;
-  console.log(`[AUTH API] GET ${url} - Verifying current session token...`);
 
   let response: Response;
   try {
@@ -85,19 +80,19 @@ export const getMe = async (token: string) => {
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch (networkError) {
-    console.error("[AUTH API] Network error verifying token at:", url, networkError);
+    console.error("[AUTH API] Network error verifying token:", networkError);
     throw new Error(
-      `Could not connect to FastAPI server, error 3 to verify token.`
+      "Unable to verify authentication session. Please sign in again."
     );
   }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
     console.warn(`[AUTH API] /auth/me rejected with status ${response.status}:`, errorData);
-    throw new Error(errorData?.detail || `Session expired or invalid (HTTP ${response.status})`);
+    throw new Error(errorData?.detail || "Session expired or invalid.");
   }
 
   const userData = await response.json();
-  console.log("[AUTH API] /auth/me profile verified successfully:", userData);
   return userData; // { id, username, email, created_at }
 };
+
