@@ -121,7 +121,7 @@ export interface SubstitutedIngredient {
   substitutedText: string;
   substituteName: string;
   goal: HealthGoal;
-  improvement: number;
-  unit: string;
+  improvement?: number;
+  unit?: string;
 }
 

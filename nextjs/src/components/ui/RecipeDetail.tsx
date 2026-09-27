@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchRecipeImage } from "../../api/imageAPI";
 import {
@@ -123,6 +123,29 @@ export default function RecipeDetail({ recipeName }: { recipeName: string }) {
   const [activeDropdownGoal, setActiveDropdownGoal] =
     useState<HealthGoal | null>(null);
   const [checkedIndices, setCheckedIndices] = useState<Set<number>>(new Set());
+
+  // Floating error tag for unmatchable substitutions (discards promptly)
+  const [floatingError, setFloatingError] = useState<{
+    id: number;
+    ingredient: string;
+    count?: number;
+  } | null>(null);
+  const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const triggerFloatingError = (ingredientName: string, count: number = 1) => {
+    if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    const id = Date.now();
+    setFloatingError({ id, ingredient: ingredientName, count });
+    errorTimeoutRef.current = setTimeout(() => {
+      setFloatingError((curr) => (curr?.id === id ? null : curr));
+    }, 4000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -287,7 +310,13 @@ export default function RecipeDetail({ recipeName }: { recipeName: string }) {
     setIsSubmittingHealthier(true);
 
     try {
-      const results = await Promise.all(
+      const failedNames: string[] = [];
+      const successfulResults: {
+        index: number;
+        substitution: SubstitutedIngredient;
+      }[] = [];
+
+      await Promise.all(
         targetIndices.map(async (index) => {
           const original = ingredients[index];
           const query =
@@ -298,8 +327,8 @@ export default function RecipeDetail({ recipeName }: { recipeName: string }) {
           const res = await fetchHealthierAlternative(query, goal);
           const topRec = res?.Recommendations?.[0];
 
-          if (topRec) {
-            return {
+          if (topRec && topRec.Ingredient) {
+            successfulResults.push({
               index,
               substitution: {
                 originalText: original,
@@ -309,21 +338,27 @@ export default function RecipeDetail({ recipeName }: { recipeName: string }) {
                 improvement: topRec.Health_Improvement,
                 unit: topRec.Unit,
               },
-            };
+            });
+          } else {
+            failedNames.push(query);
           }
-          return null;
         })
       );
 
-      setSubstitutedMap((prev) => {
-        const updated = { ...prev };
-        for (const item of results) {
-          if (item) {
+      if (successfulResults.length > 0) {
+        setSubstitutedMap((prev) => {
+          const updated = { ...prev };
+          for (const item of successfulResults) {
             updated[item.index] = item.substitution;
           }
-        }
-        return updated;
-      });
+          return updated;
+        });
+      }
+
+      if (failedNames.length > 0) {
+        const primary = failedNames[0];
+        triggerFloatingError(primary, failedNames.length);
+      }
 
       // Clear selections
       setSelectedIndices(new Set());
@@ -331,6 +366,7 @@ export default function RecipeDetail({ recipeName }: { recipeName: string }) {
       setActiveDropdownGoal(null);
     } catch (err) {
       console.error("Healthier substitution failed:", err);
+      triggerFloatingError("Selected items");
     } finally {
       setIsSubmittingHealthier(false);
     }
@@ -781,7 +817,7 @@ export default function RecipeDetail({ recipeName }: { recipeName: string }) {
                               {sub.substitutedText}
                             </span>
 
-                            {/* Nutritional Improvement Badge (Muted Red, Yellow, Green) */}
+                            {/* Goal Badge (Muted Red, Yellow, Green — No inaccurate delta tags) */}
                             <span
                               className={`rounded-md px-2 py-0.5 text-[0.68rem] font-medium border ${
                                 sub.goal === "higher_protein"
@@ -791,12 +827,9 @@ export default function RecipeDetail({ recipeName }: { recipeName: string }) {
                                   : "bg-[#fbf2f1] text-[#7a2b22] border-[#dfa59d]"
                               }`}
                             >
-                              {sub.goal === "higher_protein" &&
-                                `+${sub.improvement}${sub.unit} protein`}
-                              {sub.goal === "lower_calorie" &&
-                                `-${sub.improvement}${sub.unit}`}
-                              {sub.goal === "lower_carb" &&
-                                `-${sub.improvement}${sub.unit} carbs`}
+                              {sub.goal === "higher_protein" && "Higher Protein"}
+                              {sub.goal === "lower_calorie" && "Lower Calorie"}
+                              {sub.goal === "lower_carb" && "Lower Carb"}
                             </span>
                           </div>
                         </div>
@@ -1014,6 +1047,42 @@ export default function RecipeDetail({ recipeName }: { recipeName: string }) {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Error Tag at the Corner (Discards promptly) */}
+      {floatingError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="fixed bottom-6 right-6 z-50 max-w-sm rounded-xl border border-[#dfa59d] bg-white/95 p-3.5 shadow-2xl backdrop-blur-md transition-all duration-300"
+        >
+          <div className="flex items-start gap-2.5">
+            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#b95c50]" />
+            <div className="flex-1 text-xs">
+              <p
+                className={`${roboto_mono.className} text-[0.65rem] font-semibold uppercase tracking-wider text-[#b95c50]`}
+              >
+                NO SUBSTITUTE FOUND
+              </p>
+              <p className="mt-0.5 font-medium text-foreground">
+                {floatingError.count && floatingError.count > 1
+                  ? `Could not find alternatives for ${floatingError.count} items (${floatingError.ingredient}).`
+                  : `Could not find a substitute for "${floatingError.ingredient}".`}
+              </p>
+              <p className="mt-1 text-[0.72rem] text-muted-foreground">
+                Choose this one individually to soften request.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFloatingError(null)}
+              className="rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
+              title="Dismiss"
+            >
+              <X size={14} />
+            </button>
           </div>
         </div>
       )}
